@@ -104,10 +104,13 @@ export async function onRequestPost({ request, env }) {
     }
 
     const statements = [
-      db.prepare(`
-        INSERT INTO customers (name, phone, address)
-        VALUES (?, ?, ?)
-      `).bind(name, phone, address),
+     db.prepare(`
+  INSERT INTO customers (name, phone, address)
+  VALUES (?, ?, ?)
+  ON CONFLICT(phone) DO UPDATE SET
+    name = excluded.name,
+    address = excluded.address
+`).bind(name, phone, address),
 
       ...items.map(item => {
         const total = item.price * item.qty;
