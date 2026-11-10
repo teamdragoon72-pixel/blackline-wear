@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,13 +10,25 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+
   <header class="topbar">
-    <a class="brand" href="#"><span>BLACK</span> LINE <b>WEAR</b></a>
-    <nav><a href="#men">رجالي</a><a href="#women">حريمي</a><a href="#about">عن البراند</a></nav>
-    <button class="cart-button" id="openCart">السلة <span id="cartCount">0</span></button>
+    <a class="brand" href="#">
+      <span>BLACK</span> LINE <b>WEAR</b>
+    </a>
+
+    <nav>
+      <a href="#men">رجالي</a>
+      <a href="#women">حريمي</a>
+      <a href="#about">عن البراند</a>
+    </nav>
+
+    <button class="cart-button" id="openCart">
+      السلة <span id="cartCount">0</span>
+    </button>
   </header>
 
   <main>
+
     <section class="hero">
       <div class="hero-copy">
         <p class="eyebrow">MOVE WITH CONFIDENCE</p>
@@ -23,55 +36,135 @@
         <p>ملابس رياضية وكاجوال بتصميم يجمع الراحة والقوة.</p>
         <a class="cta" href="#collections">اكتشف المجموعة</a>
       </div>
-      <div class="hero-art"><div class="orbit"></div><div class="hero-mark">BL<span>W</span></div><small>BUILT FOR EVERY DAY</small></div>
+
+      <div class="hero-art">
+        <div class="orbit"></div>
+        <div class="hero-mark">BL<span>W</span></div>
+        <small>BUILT FOR EVERY DAY</small>
+      </div>
     </section>
 
     <section id="collections" class="section">
-      <div class="section-head"><div><p class="eyebrow">OUR COLLECTIONS</p><h2>اختار مجموعتك</h2></div></div>
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">OUR COLLECTIONS</p>
+          <h2>اختار مجموعتك</h2>
+        </div>
+      </div>
+
       <div class="collections">
-        <a class="collection men" href="#men"><span>01 / MEN</span><strong>رجالي</strong><small>اكتشف القطع</small></a>
-        <a class="collection women" href="#women"><span>02 / WOMEN</span><strong>حريمي</strong><small>اكتشف القطع</small></a>
+        <a class="collection men" href="#men">
+          <span>01 / MEN</span>
+          <strong>رجالي</strong>
+          <small>اكتشف القطع</small>
+        </a>
+
+        <a class="collection women" href="#women">
+          <span>02 / WOMEN</span>
+          <strong>حريمي</strong>
+          <small>اكتشف القطع</small>
+        </a>
       </div>
     </section>
 
     <section id="men" class="section">
-      <div class="section-head"><div><p class="eyebrow">MEN'S EDIT</p><h2>تشكيلة رجالي</h2></div></div>
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">MEN'S EDIT</p>
+          <h2>تشكيلة رجالي</h2>
+        </div>
+      </div>
       <div class="products" id="menProducts"></div>
     </section>
+
     <section id="women" class="section">
-      <div class="section-head"><div><p class="eyebrow">WOMEN'S EDIT</p><h2>تشكيلة حريمي</h2></div></div>
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">WOMEN'S EDIT</p>
+          <h2>تشكيلة حريمي</h2>
+        </div>
+      </div>
       <div class="products" id="womenProducts"></div>
     </section>
 
     <section id="about" class="about">
-      <p class="eyebrow">BLACK LINE WEAR</p><h2>بساطة في الشكل.<br><em>قوة في الحضور.</em></h2>
+      <p class="eyebrow">BLACK LINE WEAR</p>
+      <h2>بساطة في الشكل.<br><em>قوة في الحضور.</em></h2>
       <p>قطع يومية تناسب الحركة والراحة، بتفاصيل بسيطة وشخصية واضحة.</p>
     </section>
+
   </main>
 
-  <footer><a class="brand" href="#"><span>BLACK</span> LINE <b>WEAR</b></a><small>© BLACK LINE WEAR — جميع الحقوق محفوظة</small></footer>
+  <footer>
+    <a class="brand" href="#">
+      <span>BLACK</span> LINE <b>WEAR</b>
+    </a>
+    <small>© BLACK LINE WEAR — جميع الحقوق محفوظة</small>
+  </footer>
 
   <div class="overlay" id="overlay"></div>
+
   <aside class="cart" id="cartPanel" aria-label="سلة المشتريات">
-    <div class="cart-head"><h2>سلة المشتريات</h2><button id="closeCart" aria-label="إغلاق">×</button></div>
-    <div id="cartItems" class="cart-items"><p class="empty">السلة فارغة حاليًا.</p></div>
-    <div class="cart-bottom"><div class="total"><span>الإجمالي</span><strong id="cartTotal">0 جنيه</strong></div>
-      <button class="cta full" id="checkout">إتمام الطلب</button>
-      <small>الدفع عند الاستلام متاح في هذه النسخة التجريبية.</small>
+
+    <div class="cart-head">
+      <h2>سلة المشتريات</h2>
+      <button id="closeCart" aria-label="إغلاق">×</button>
     </div>
+
+    <div id="cartItems" class="cart-items">
+      <p class="empty">السلة فارغة حاليًا.</p>
+    </div>
+
+    <div class="cart-bottom">
+      <div class="total">
+        <span>الإجمالي</span>
+        <strong id="cartTotal">0 جنيه</strong>
+      </div>
+
+      <button class="cta full" id="checkout">
+        إتمام الطلب
+      </button>
+
+      <small>الدفع عند الاستلام متاح.</small>
+    </div>
+
   </aside>
 
   <dialog id="orderDialog">
     <form id="orderForm" method="dialog">
+
       <button class="dialog-close" type="button" id="closeDialog">×</button>
-      <p class="eyebrow">CHECKOUT</p><h2>بيانات التوصيل</h2>
-      <label>الاسم بالكامل<input name="name" required autocomplete="name"></label>
-      <label>رقم الموبايل<input name="phone" required inputmode="tel" autocomplete="tel"></label>
-      <label>العنوان بالتفصيل<textarea name="address" required rows="3"></textarea></label>
-      <button class="cta full" type="submit">تأكيد الطلب</button>
-      <p class="form-note">هذه نسخة واجهة تجريبية؛ الطلبات لن تُحفظ على خادم قبل إعداد الـ API.</p>
+
+      <p class="eyebrow">CHECKOUT</p>
+      <h2>بيانات التوصيل</h2>
+
+      <label>
+        الاسم بالكامل
+        <input name="name" required autocomplete="name">
+      </label>
+
+      <label>
+        رقم الموبايل
+        <input name="phone" type="tel" required inputmode="tel" autocomplete="tel">
+      </label>
+
+      <label>
+        العنوان بالتفصيل
+        <textarea name="address" required rows="3"></textarea>
+      </label>
+
+      <button class="cta full" type="submit">
+        تأكيد الطلب
+      </button>
+
+      <p class="form-note">
+        سيتم إرسال طلبك وتسجيله بعد تأكيد البيانات.
+      </p>
+
     </form>
   </dialog>
+
   <script src="/app.js"></script>
+
 </body>
 </html>
