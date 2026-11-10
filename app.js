@@ -8,6 +8,16 @@ const products = [
   { id: 6, name: "ليجن رياضي", category: "women", price: 550, mark: "FIT" }
 ];
 
+const sizes = ["S", "M", "L", "XL", "XXL"];
+
+const colors = [
+  { value: "أسود", label: "أسود" },
+  { value: "أبيض", label: "أبيض" },
+  { value: "رمادي", label: "رمادي" },
+  { value: "زيتي", label: "زيتي" },
+  { value: "بيرجندي", label: "بيرجندي" }
+];
+
 let cart = [];
 
 const money = n => `${n.toLocaleString("en-US")} جنيه`;
@@ -22,6 +32,19 @@ function renderProducts() {
             <div class="product-art">${p.mark}</div>
             <h3>${p.name}</h3>
             <p>قطعة تجريبية — استبدلها بمنتجك الحقيقي</p>
+
+            <label for="size-${p.id}">المقاس</label>
+            <select id="size-${p.id}">
+              <option value="">اختر المقاس</option>
+              ${sizes.map(s => `<option value="${s}">${s}</option>`).join("")}
+            </select>
+
+            <label for="color-${p.id}">اللون</label>
+            <select id="color-${p.id}">
+              <option value="">اختر اللون</option>
+              ${colors.map(c => `<option value="${c.value}">${c.label}</option>`).join("")}
+            </select>
+
             <div class="product-foot">
               <strong>${money(p.price)}</strong>
               <button onclick="addToCart(${p.id})">أضف للسلة +</button>
@@ -32,19 +55,29 @@ function renderProducts() {
 }
 
 function addToCart(id) {
-  const item = cart.find(x => x.id === id);
+  const size = document.getElementById(`size-${id}`).value;
+  const color = document.getElementById(`color-${id}`).value;
+
+  if (!size || !color) {
+    alert("من فضلك اختر المقاس واللون أولاً");
+    return;
+  }
+
+  const item = cart.find(x =>
+    x.id === id && x.size === size && x.color === color
+  );
 
   if (item) {
     item.qty++;
   } else {
-    cart.push({ id, qty: 1 });
+    cart.push({ id, qty: 1, size, color });
   }
 
   renderCart();
 }
 
-function removeFromCart(id) {
-  cart = cart.filter(x => x.id !== id);
+function removeFromCart(index) {
+  cart.splice(index, 1);
   renderCart();
 }
 
@@ -58,16 +91,20 @@ function renderCart() {
     ));
 
   document.getElementById("cartItems").innerHTML = cart.length
-    ? cart.map(x => {
+    ? cart.map((x, index) => {
         const p = products.find(p => p.id === x.id);
 
         return `
           <div class="cart-line">
             <div>
               ${p.name}<br>
-              <small>${x.qty} × ${money(p.price)}</small>
+              <small>
+                المقاس: ${x.size}<br>
+                اللون: ${x.color}<br>
+                ${x.qty} × ${money(p.price)}
+              </small>
             </div>
-            <button onclick="removeFromCart(${p.id})">حذف</button>
+            <button onclick="removeFromCart(${index})">حذف</button>
           </div>
         `;
       }).join("")
@@ -133,7 +170,9 @@ document.getElementById("orderForm").addEventListener("submit", async e => {
         ...data,
         items: cart.map(x => ({
           id: x.id,
-          qty: x.qty
+          qty: x.qty,
+          size: x.size,
+          color: x.color
         }))
       })
     });
