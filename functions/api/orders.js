@@ -8,6 +8,9 @@ const PRODUCTS = {
   6: { name: "ليجن رياضي", price: 550 }
 };
 
+const SIZES = ["S", "M", "L", "XL", "XXL"];
+const COLORS = ["أسود", "أبيض", "رمادي", "زيتي", "بيرجندي"];
+
 export async function onRequestPost({ request, env }) {
   try {
     const db = env["blackline-wear-orders"];
@@ -50,38 +53,55 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
+    if (data.items.length > 20) {
+      return Response.json(
+        { error: "عدد المنتجات أكبر من المسموح" },
+        { status: 400 }
+      );
+    }
+
+    const items = [];
     const quantities = new Map();
 
     for (const item of data.items) {
       const id = Number(item.id);
       const qty = Number(item.qty);
+      const size = String(item.size || "").trim();
+      const color = String(item.color || "").trim();
 
       if (
         !PRODUCTS[id] ||
         !Number.isInteger(qty) ||
         qty < 1 ||
-        qty > 20
+        qty > 20 ||
+        !SIZES.includes(size) ||
+        !COLORS.includes(color)
       ) {
         return Response.json(
-          { error: "بيانات أحد المنتجات غير صحيحة" },
+          { error: "تأكد من اختيار مقاس ولون صحيح لكل منتج" },
           { status: 400 }
         );
       }
 
-      quantities.set(id, (quantities.get(id) || 0) + qty);
+      const key = `${id}-${size}-${color}`;
+      const newQty = (quantities.get(key) || 0) + qty;
 
-      if (quantities.get(id) > 20) {
+      if (newQty > 20) {
         return Response.json(
           { error: "الكمية المطلوبة أكبر من المسموح" },
           { status: 400 }
         );
       }
-    }
 
-    const items = [...quantities.entries()].map(([id, qty]) => ({
-      ...PRODUCTS[id],
-      qty
-    }));
+      quantities.set(key, newQty);
+
+      items.push({
+        ...PRODUCTS[id],
+        qty,
+        size,
+        color
+      });
+    }
 
     const statements = [
       db.prepare(`
@@ -98,17 +118,21 @@ export async function onRequestPost({ request, env }) {
             phone,
             address,
             product_name,
+            size,
+            color,
             quantity,
             price,
             total,
             status
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
         `).bind(
           name,
           phone,
           address,
           item.name,
+          item.size,
+          item.color,
           item.qty,
           item.price,
           total
@@ -131,4 +155,3 @@ export async function onRequestPost({ request, env }) {
     );
   }
 }
-
