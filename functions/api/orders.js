@@ -150,8 +150,10 @@ export async function onRequestPost({ request, env }) {
 
   } catch (error) {
     return Response.json(
-      { error: "حدث خطأ أثناء تسجيل الطلب" },
+      {
+        error: "حدث خطأ أثناء تسجيل الطلب",
+        details: error.message
+      },
       { status: 500 }
     );
   }
-}
