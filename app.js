@@ -179,9 +179,13 @@ document.getElementById("orderForm").addEventListener("submit", async e => {
 
     const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result.error || "تعذر إرسال الطلب");
-    }
+   if (!response.ok) {
+  throw new Error(
+    result.details
+      ? result.error + " — " + result.details
+      : result.error || "تعذر إرسال الطلب"
+  );
+}
 
     alert(
       "تم تسجيل طلبك بنجاح. رقم الطلب: " + result.orderId
