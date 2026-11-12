@@ -7,6 +7,7 @@
   <title>BLACK LINE - لوحة الإدارة</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 20px;
@@ -14,6 +15,7 @@
       color: white;
       font-family: Arial, sans-serif;
     }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -23,7 +25,9 @@
       border-bottom: 1px solid #333;
       padding-bottom: 20px;
     }
+
     h1 { letter-spacing: 2px; }
+
     button, select {
       border: 0;
       border-radius: 8px;
@@ -31,9 +35,12 @@
       cursor: pointer;
       font-weight: bold;
     }
+
     button { margin: 4px; }
+
     .refresh { background: white; color: black; }
     .logout { background: #333; color: white; }
+
     .summary {
       background: #1c1c1c;
       border: 1px solid #333;
@@ -41,16 +48,19 @@
       border-radius: 12px;
       margin: 25px 0;
     }
+
     .summary strong {
       font-size: 28px;
       display: block;
       margin-top: 10px;
     }
+
     #orders {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
     }
+
     .order {
       background: #1b1b1b;
       border: 1px solid #333;
@@ -58,8 +68,15 @@
       padding: 18px;
       overflow-wrap: anywhere;
     }
+
     .order h3 { margin-top: 0; }
-    .order p { color: #ccc; line-height: 1.8; margin: 6px 0; }
+
+    .order p {
+      color: #ccc;
+      line-height: 1.8;
+      margin: 6px 0;
+    }
+
     .total {
       color: white !important;
       font-size: 20px;
@@ -67,7 +84,9 @@
       border-top: 1px solid #444;
       padding-top: 12px;
     }
+
     .status { color: #ddd; margin: 10px 0; }
+
     select {
       width: 100%;
       background: #292929;
@@ -75,14 +94,36 @@
       border: 1px solid #555;
       margin-top: 10px;
     }
+
     .save {
       width: 100%;
       background: white;
       color: black;
       margin: 10px 0;
     }
-    .save:disabled { opacity: .5; cursor: wait; }
+
+    .save:disabled {
+      opacity: .5;
+      cursor: wait;
+    }
+
+    .whatsapp {
+      display: block;
+      width: 100%;
+      background: #25D366;
+      color: #071b0e;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 13px;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .whatsapp:hover { background: #20bd5b; }
+
     #message { color: #bbb; margin: 20px 0; }
+
     @media(max-width:500px) {
       body { padding: 12px; }
       header { align-items: stretch; }
@@ -90,11 +131,13 @@
   </style>
 </head>
 <body>
+
   <header>
     <div>
       <h1>BLACK LINE</h1>
       <p>ADMIN DASHBOARD</p>
     </div>
+
     <div>
       <button class="refresh" id="refresh">تحديث الطلبات</button>
       <button class="logout" id="logout">خروج</button>
@@ -127,6 +170,53 @@
       if (className) element.className = className;
       parent.appendChild(element);
       return element;
+    }
+
+    // تحويل رقم الهاتف إلى الصيغة الدولية المصرية
+    function normalizePhone(phone) {
+      let number = String(phone || "").replace(/\D/g, "");
+
+      if (number.startsWith("00")) {
+        number = number.slice(2);
+      }
+
+      if (number.startsWith("0")) {
+        number = "20" + number.slice(1);
+      } else if (/^(10|11|12|15)\d{8}$/.test(number)) {
+        number = "20" + number;
+      }
+
+      return number;
+    }
+
+    // تجهيز رسالة واتساب للعميل
+    function createWhatsAppLink(order) {
+      const phone = normalizePhone(order.phone);
+
+      if (!phone || phone.length < 10) {
+        return null;
+      }
+
+      const customerName = order.customer_name || "عميلنا العزيز";
+
+      const text =
+`أهلاً ${customerName} ❤️
+
+مع حضرتك فريق BLACK LINE WEAR.
+
+بنتواصل مع حضرتك لتأكيد طلبك:
+
+رقم الطلب: #${order.id}
+المنتج: ${order.product_name}
+المقاس: ${order.size || "غير محدد"}
+اللون: ${order.color || "غير محدد"}
+الكمية: ${order.quantity}
+الإجمالي: ${order.total} جنيه
+
+شكراً لثقتك في BLACK LINE WEAR 🖤`;
+
+      return "https://wa.me/" + phone +
+        "?text=" + encodeURIComponent(text);
     }
 
     async function updateOrder(id, status, button) {
@@ -211,6 +301,21 @@
           addText(card, "p", "التاريخ: " + order.created_at);
           addText(card, "p", "الإجمالي: " + order.total + " جنيه", "total");
 
+          // زر واتساب
+          const whatsappUrl = createWhatsAppLink(order);
+
+          if (whatsappUrl) {
+            const whatsappButton = document.createElement("a");
+            whatsappButton.className = "whatsapp";
+            whatsappButton.href = whatsappUrl;
+            whatsappButton.target = "_blank";
+            whatsappButton.rel = "noopener noreferrer";
+            whatsappButton.textContent = "تواصل مع العميل عبر واتساب";
+            card.appendChild(whatsappButton);
+          } else {
+            addText(card, "p", "رقم الهاتف غير صالح لفتح واتساب");
+          }
+
           const select = document.createElement("select");
           select.setAttribute("aria-label", "حالة الطلب");
 
@@ -227,6 +332,7 @@
           const saveButton = document.createElement("button");
           saveButton.className = "save";
           saveButton.textContent = "حفظ الحالة";
+
           saveButton.addEventListener("click", () => {
             updateOrder(order.id, select.value, saveButton);
           });
@@ -248,5 +354,6 @@
 
     loadOrders();
   </script>
+
 </body>
 </html>
