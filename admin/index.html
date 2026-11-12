@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLACK LINE | الإدارة</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #101010;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    .panel {
+      width: 100%;
+      max-width: 400px;
+      background: #1b1b1b;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 30px;
+    }
+    h1 { text-align: center; letter-spacing: 3px; }
+    p { color: #aaa; text-align: center; }
+    input, button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    input {
+      background: #292929;
+      color: white;
+      border: 1px solid #444;
+    }
+    button {
+      background: white;
+      color: black;
+      border: 0;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #message { min-height: 24px; color: #ff7777; }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>BLACK LINE</h1>
+    <p>ADMIN CONTROL PANEL</p>
+
+    <form id="loginForm">
+      <input
+        type="password"
+        id="password"
+        placeholder="كلمة مرور الإدارة"
+        required
+        autocomplete="current-password"
+      >
+      <button type="submit">تسجيل الدخول</button>
+    </form>
+
+    <p id="message"></p>
+  </main>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "جاري تسجيل الدخول...";
+
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            password: document.getElementById("password").value
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "فشل تسجيل الدخول");
+        }
+
+        window.location.href = "/admin/dashboard.html";
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>
