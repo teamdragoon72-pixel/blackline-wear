@@ -11,11 +11,17 @@ function base64url(bytes) {
 export async function onRequestPost({ request, env }) {
   try {
     if (!env.ADMIN_PASSWORD) {
-      return Response.json(
-        { error: "إعداد كلمة مرور الإدارة غير موجود" },
-        { status: 500 }
-      );
-    }
+  return Response.json(
+    {
+      error: "المتغير غير ظاهر للكود",
+      debug: {
+        hasVariable: Object.prototype.hasOwnProperty.call(env, "ADMIN_PASSWORD"),
+        availableBindings: Object.keys(env)
+      }
+    },
+    { status: 500 }
+  );
+}
 
     const data = await request.json();
     const password = String(data.password || "");
