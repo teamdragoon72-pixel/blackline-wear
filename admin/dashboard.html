@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BLACK LINE - لوحة الإدارة</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #101010;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 20px;
+    }
+
+    h1 { letter-spacing: 2px; }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .refresh { background: white; color: black; }
+    .logout { background: #333; color: white; }
+
+    .summary {
+      background: #1c1c1c;
+      border: 1px solid #333;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 25px 0;
+    }
+
+    .summary strong {
+      font-size: 28px;
+      display: block;
+      margin-top: 10px;
+    }
+
+    #orders {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .order {
+      background: #1b1b1b;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .order h3 { margin-top: 0; color: white; }
+
+    .order p {
+      color: #ccc;
+      line-height: 1.8;
+      margin: 6px 0;
+    }
+
+    .total {
+      color: #fff !important;
+      font-size: 20px;
+      font-weight: bold;
+      border-top: 1px solid #444;
+      padding-top: 12px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #343434;
+      border-radius: 20px;
+      color: #eee;
+      margin: 10px 0;
+    }
+
+    #message {
+      color: #bbb;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 500px) {
+      body { padding: 12px; }
+      header { align-items: stretch; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>BLACK LINE</h1>
+      <p>ADMIN DASHBOARD</p>
+    </div>
+
+    <div>
+      <button class="refresh" id="refresh">تحديث الطلبات</button>
+      <button class="logout" id="logout">خروج</button>
+    </div>
+  </header>
+
+  <section class="summary">
+    إجمالي الطلبات المعروضة
+    <strong id="count">0</strong>
+  </section>
+
+  <p id="message">جاري تحميل الطلبات...</p>
+  <section id="orders"></section>
+
+  <script>
+    const ordersBox = document.getElementById("orders");
+    const message = document.getElementById("message");
+
+    function addText(parent, tag, value, className = "") {
+      const element = document.createElement(tag);
+      element.textContent = value ?? "";
+      if (className) element.className = className;
+      parent.appendChild(element);
+      return element;
+    }
+
+    async function loadOrders() {
+      message.textContent = "جاري تحميل الطلبات...";
+      ordersBox.replaceChildren();
+
+      try {
+        const response = await fetch("/api/admin/orders", {
+          credentials: "same-origin",
+          cache: "no-store"
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/admin/";
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "تعذر تحميل الطلبات");
+        }
+
+        const orders = data.orders || [];
+
+        document.getElementById("count").textContent = orders.length;
+
+        if (!orders.length) {
+          message.textContent = "لا توجد طلبات حتى الآن.";
+          return;
+        }
+
+        message.textContent = "";
+
+        orders.forEach(order => {
+          const card = document.createElement("article");
+          card.className = "order";
+
+          addText(card, "h3", "طلب رقم #" + order.id);
+
+          addText(card, "p", "العميل: " + order.customer_name);
+          addText(card, "p", "الهاتف: " + order.phone);
+          addText(card, "p", "العنوان: " + order.address);
+
+          addText(card, "p", "المنتج: " + order.product_name);
+          addText(card, "p", "المقاس: " + (order.size || "غير محدد"));
+          addText(card, "p", "اللون: " + (order.color || "غير محدد"));
+          addText(card, "p", "الكمية: " + order.quantity);
+          addText(card, "p", "سعر القطعة: " + order.price + " جنيه");
+
+          addText(card, "p", "الحالة: " + order.status, "status");
+          addText(card, "p", "التاريخ: " + order.created_at);
+          addText(card, "p", "الإجمالي: " + order.total + " جنيه", "total");
+
+          ordersBox.appendChild(card);
+        });
+
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    document.getElementById("refresh").addEventListener("click", loadOrders);
+
+    document.getElementById("logout").addEventListener("click", () => {
+      window.location.href = "/api/admin/logout";
+    });
+
+    loadOrders();
+  </script>
+</body>
+</html>
