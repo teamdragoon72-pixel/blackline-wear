@@ -10,7 +10,49 @@ export async function onRequestGet({ env }) {
       );
     }
 
-    const result = await db.prepare(`
+    // إحصائيات جميع الطلبات
+    const statsResult = await db.prepare(`
+      SELECT
+        COUNT(*) AS totalOrders,
+
+        COALESCE(SUM(
+          CASE WHEN status != 'cancelled'
+          THEN total ELSE 0 END
+        ), 0) AS totalSales,
+
+        COALESCE(SUM(
+          CASE WHEN status = 'pending'
+          THEN 1 ELSE 0 END
+        ), 0) AS pendingOrders,
+
+        COALESCE(SUM(
+          CASE WHEN status = 'processing'
+          THEN 1 ELSE 0 END
+        ), 0) AS processingOrders,
+
+        COALESCE(SUM(
+          CASE WHEN status = 'delivered'
+          THEN 1 ELSE 0 END
+        ), 0) AS deliveredOrders
+
+      FROM orders
+    `).all();
+
+    // أكثر 5 منتجات مبيعاً
+    const productsResult = await db.prepare(`
+      SELECT
+        product_name,
+        SUM(quantity) AS totalQuantity,
+        SUM(total) AS totalRevenue
+      FROM orders
+      WHERE status != 'cancelled'
+      GROUP BY product_name
+      ORDER BY totalQuantity DESC
+      LIMIT 5
+    `).all();
+
+    // آخر 100 طلب
+    const ordersResult = await db.prepare(`
       SELECT
         id,
         customer_name,
@@ -32,7 +74,9 @@ export async function onRequestGet({ env }) {
     return Response.json(
       {
         success: true,
-        orders: result.results || []
+        orders: ordersResult.results || [],
+        stats: (statsResult.results || [])[0] || {},
+        topProducts: productsResult.results || []
       },
       {
         headers: {
@@ -44,7 +88,7 @@ export async function onRequestGet({ env }) {
   } catch (error) {
     return Response.json(
       {
-        error: "تعذر تحميل الطلبات",
+        error: "تعذر تحميل الطلبات والإحصائيات",
         details: error.message
       },
       { status: 500 }
