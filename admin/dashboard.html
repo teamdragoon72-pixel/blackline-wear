@@ -7,7 +7,6 @@
   <title>BLACK LINE - لوحة الإدارة</title>
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       padding: 20px;
@@ -15,7 +14,6 @@
       color: white;
       font-family: Arial, sans-serif;
     }
-
     header {
       display: flex;
       justify-content: space-between;
@@ -25,20 +23,17 @@
       border-bottom: 1px solid #333;
       padding-bottom: 20px;
     }
-
     h1 { letter-spacing: 2px; }
-
-    button {
+    button, select {
       border: 0;
       border-radius: 8px;
-      padding: 12px 18px;
+      padding: 12px;
       cursor: pointer;
       font-weight: bold;
     }
-
+    button { margin: 4px; }
     .refresh { background: white; color: black; }
     .logout { background: #333; color: white; }
-
     .summary {
       background: #1c1c1c;
       border: 1px solid #333;
@@ -46,19 +41,16 @@
       border-radius: 12px;
       margin: 25px 0;
     }
-
     .summary strong {
       font-size: 28px;
       display: block;
       margin-top: 10px;
     }
-
     #orders {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
     }
-
     .order {
       background: #1b1b1b;
       border: 1px solid #333;
@@ -66,51 +58,43 @@
       padding: 18px;
       overflow-wrap: anywhere;
     }
-
-    .order h3 { margin-top: 0; color: white; }
-
-    .order p {
-      color: #ccc;
-      line-height: 1.8;
-      margin: 6px 0;
-    }
-
+    .order h3 { margin-top: 0; }
+    .order p { color: #ccc; line-height: 1.8; margin: 6px 0; }
     .total {
-      color: #fff !important;
+      color: white !important;
       font-size: 20px;
       font-weight: bold;
       border-top: 1px solid #444;
       padding-top: 12px;
     }
-
-    .status {
-      display: inline-block;
-      padding: 6px 12px;
-      background: #343434;
-      border-radius: 20px;
-      color: #eee;
+    .status { color: #ddd; margin: 10px 0; }
+    select {
+      width: 100%;
+      background: #292929;
+      color: white;
+      border: 1px solid #555;
+      margin-top: 10px;
+    }
+    .save {
+      width: 100%;
+      background: white;
+      color: black;
       margin: 10px 0;
     }
-
-    #message {
-      color: #bbb;
-      margin: 20px 0;
-    }
-
-    @media (max-width: 500px) {
+    .save:disabled { opacity: .5; cursor: wait; }
+    #message { color: #bbb; margin: 20px 0; }
+    @media(max-width:500px) {
       body { padding: 12px; }
       header { align-items: stretch; }
     }
   </style>
 </head>
-
 <body>
   <header>
     <div>
       <h1>BLACK LINE</h1>
       <p>ADMIN DASHBOARD</p>
     </div>
-
     <div>
       <button class="refresh" id="refresh">تحديث الطلبات</button>
       <button class="logout" id="logout">خروج</button>
@@ -129,12 +113,53 @@
     const ordersBox = document.getElementById("orders");
     const message = document.getElementById("message");
 
+    const statusNames = {
+      pending: "جديد",
+      processing: "قيد التجهيز",
+      shipped: "تم الشحن",
+      delivered: "تم التسليم",
+      cancelled: "ملغي"
+    };
+
     function addText(parent, tag, value, className = "") {
       const element = document.createElement(tag);
       element.textContent = value ?? "";
       if (className) element.className = className;
       parent.appendChild(element);
       return element;
+    }
+
+    async function updateOrder(id, status, button) {
+      button.disabled = true;
+      button.textContent = "جاري الحفظ...";
+
+      try {
+        const response = await fetch("/api/admin/update-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ id, status })
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/admin/";
+          return;
+        }
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "فشل تحديث الحالة");
+        }
+
+        message.textContent = "تم تحديث الطلب #" + id + " بنجاح";
+        await loadOrders();
+
+      } catch (error) {
+        message.textContent = error.message;
+        button.disabled = false;
+        button.textContent = "حفظ الحالة";
+      }
     }
 
     async function loadOrders() {
@@ -159,7 +184,6 @@
         }
 
         const orders = data.orders || [];
-
         document.getElementById("count").textContent = orders.length;
 
         if (!orders.length) {
@@ -174,21 +198,40 @@
           card.className = "order";
 
           addText(card, "h3", "طلب رقم #" + order.id);
-
           addText(card, "p", "العميل: " + order.customer_name);
           addText(card, "p", "الهاتف: " + order.phone);
           addText(card, "p", "العنوان: " + order.address);
-
           addText(card, "p", "المنتج: " + order.product_name);
           addText(card, "p", "المقاس: " + (order.size || "غير محدد"));
           addText(card, "p", "اللون: " + (order.color || "غير محدد"));
           addText(card, "p", "الكمية: " + order.quantity);
           addText(card, "p", "سعر القطعة: " + order.price + " جنيه");
-
-          addText(card, "p", "الحالة: " + order.status, "status");
+          addText(card, "p", "الحالة الحالية: " +
+            (statusNames[order.status] || order.status), "status");
           addText(card, "p", "التاريخ: " + order.created_at);
           addText(card, "p", "الإجمالي: " + order.total + " جنيه", "total");
 
+          const select = document.createElement("select");
+          select.setAttribute("aria-label", "حالة الطلب");
+
+          Object.entries(statusNames).forEach(([value, label]) => {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = label;
+            option.selected = value === order.status;
+            select.appendChild(option);
+          });
+
+          card.appendChild(select);
+
+          const saveButton = document.createElement("button");
+          saveButton.className = "save";
+          saveButton.textContent = "حفظ الحالة";
+          saveButton.addEventListener("click", () => {
+            updateOrder(order.id, select.value, saveButton);
+          });
+
+          card.appendChild(saveButton);
           ordersBox.appendChild(card);
         });
 
