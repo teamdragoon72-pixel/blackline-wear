@@ -103,15 +103,20 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    const statements = [
-     db.prepare(`
-  INSERT INTO customers (name, phone, address)
-  VALUES (?, ?, ?)
-  ON CONFLICT(phone) DO UPDATE SET
-    name = excluded.name,
-    address = excluded.address
-`).bind(name, phone, address),
+    // رقم مستقل لكل عملية شراء
+    const purchaseId = crypto.randomUUID();
 
+    const statements = [
+      // تحديث بيانات العميل
+      db.prepare(`
+        INSERT INTO customers (name, phone, address)
+        VALUES (?, ?, ?)
+        ON CONFLICT(phone) DO UPDATE SET
+          name = excluded.name,
+          address = excluded.address
+      `).bind(name, phone, address),
+
+      // تسجيل جميع منتجات السلة بنفس purchase_id
       ...items.map(item => {
         const total = item.price * item.qty;
 
@@ -126,9 +131,10 @@ export async function onRequestPost({ request, env }) {
             quantity,
             price,
             total,
-            status
+            status,
+            purchase_id
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
         `).bind(
           name,
           phone,
@@ -138,20 +144,83 @@ export async function onRequestPost({ request, env }) {
           item.color,
           item.qty,
           item.price,
-          total
+          total,
+          purchaseId
         );
-      })
+      }),
+
+      // اختيار الموظف النشط التالي بالتناوب
+      db.prepare(`
+        UPDATE assignment_settings
+        SET last_employee_id = COALESCE(
+          (
+            SELECT MIN(id)
+            FROM employees
+            WHERE is_active = 1
+              AND id > COALESCE(assignment_settings.last_employee_id, 0)
+          ),
+          (
+            SELECT MIN(id)
+            FROM employees
+            WHERE is_active = 1
+          )
+        )
+        WHERE id = 1
+          AND EXISTS (
+            SELECT 1
+            FROM employees
+            WHERE is_active = 1
+          )
+      `),
+
+      // إسناد كل منتجات عملية الشراء لنفس الموظف
+      db.prepare(`
+        INSERT INTO order_assignments (order_id, employee_id)
+        SELECT
+          orders.id,
+          assignment_settings.last_employee_id
+        FROM orders
+        CROSS JOIN assignment_settings
+        WHERE orders.purchase_id = ?
+          AND assignment_settings.id = 1
+          AND assignment_settings.last_employee_id IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM employees
+            WHERE employees.id = assignment_settings.last_employee_id
+              AND employees.is_active = 1
+          )
+      `).bind(purchaseId)
     ];
 
+    // تنفيذ التسجيل والتوزيع في عملية واحدة
     const results = await db.batch(statements);
+
+    // معرفة الموظف الذي استلم العملية
+    const assignment = await db.prepare(`
+      SELECT
+        employees.id,
+        employees.full_name
+      FROM order_assignments
+      JOIN employees
+        ON employees.id = order_assignments.employee_id
+      JOIN orders
+        ON orders.id = order_assignments.order_id
+      WHERE orders.purchase_id = ?
+      LIMIT 1
+    `).bind(purchaseId).first();
 
     return Response.json({
       success: true,
       orderId: results[1].meta.last_row_id,
+      purchaseId,
+      assigned: Boolean(assignment),
       message: "تم تسجيل الطلب بنجاح"
     });
 
   } catch (error) {
+    console.error("Order creation error:", error);
+
     return Response.json(
       {
         error: "حدث خطأ أثناء تسجيل الطلب",
