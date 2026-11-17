@@ -1,12 +1,14 @@
 
 const DB_BINDING = "blackline-wear-orders";
 const COOKIE_NAME = "blw_employee";
+const IDLE_MINUTES = 20;
 
-function json(data, status = 200) {
+function json(data, status = 200, headers = {}) {
   return Response.json(data, {
     status,
     headers: {
-      "Cache-Control": "no-store"
+      "Cache-Control": "no-store",
+      ...headers
     }
   });
 }
@@ -20,6 +22,39 @@ function getEmployeeCookie(request) {
     .find(x => x.startsWith(COOKIE_NAME + "="));
 
   return entry ? entry.slice(COOKIE_NAME.length + 1) : null;
+}
+
+function toBase64Url(bytes) {
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+async function createSession(employeeId, secret) {
+  const expiry = Date.now() + IDLE_MINUTES * 60 * 1000;
+  const message = `${employeeId}.${expiry}`;
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(message)
+  );
+
+  return `${message}.${toBase64Url(new Uint8Array(signature))}`;
 }
 
 async function verifyEmployeeSession(token, secret) {
@@ -84,10 +119,10 @@ export async function onRequestGet({ request, env }) {
   try {
     const db = env[DB_BINDING];
 
-    if (!db) {
+    if (!db || !env.EMPLOYEE_SESSION_SECRET) {
       return json({
         success: false,
-        error: "Database binding not found"
+        error: "إعدادات النظام غير مكتملة"
       }, 500);
     }
 
@@ -101,7 +136,7 @@ export async function onRequestGet({ request, env }) {
     if (!employeeId) {
       return json({
         success: false,
-        error: "جلسة الموظف غير صالحة"
+        error: "انتهت جلسة الدخول، سجل دخولك مرة أخرى"
       }, 401);
     }
 
@@ -168,16 +203,25 @@ export async function onRequestGet({ request, env }) {
       employeeId
     ).all();
 
+    // تجديد الجلسة لمدة 20 دقيقة
+    const newToken = await createSession(
+      employeeId,
+      env.EMPLOYEE_SESSION_SECRET
+    );
+
     return json({
       success: true,
       employee,
       orders: result.results || []
+    }, 200, {
+      "Set-Cookie":
+        `${COOKIE_NAME}=${newToken}; HttpOnly; Secure; SameSite=Strict; Path=/api/employee; Max-Age=1200`
     });
 
   } catch (error) {
     return json({
       success: false,
-      error: error.message || "حدث خطأ أثناء تحميل الطلبات"
+      error: "حدث خطأ أثناء تحميل الطلبات"
     }, 500);
   }
 }
