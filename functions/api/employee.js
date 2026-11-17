@@ -147,3 +147,97 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
+
+function getEmployeeCookie(request) {
+  const cookies = request.headers.get("Cookie") || "";
+  const entry = cookies.split(";")
+    .map(x => x.trim())
+    .find(x => x.startsWith("blw_employee="));
+
+  return entry ? entry.slice("blw_employee=".length) : null;
+}
+
+async function verifyEmployeeSession(token, secret) {
+  if (!token || !secret) return null;
+
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+
+    const [employeeIdText, expiryText, signature] = parts;
+    const employeeId = Number(employeeIdText);
+    const expiry = Number(expiryText);
+
+    if (
+      !Number.isInteger(employeeId) ||
+      employeeId <= 0 ||
+      !Number.isFinite(expiry) ||
+      expiry <= Date.now()
+    ) {
+      return null;
+    }
+
+    const message = `${employeeId}.${expiry}`;
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    const base64 = signature
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
+    const signatureBytes = Uint8Array.from(
+      atob(padded),
+      c => c.charCodeAt(0)
+    );
+
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      signatureBytes,
+      new TextEncoder().encode(message)
+    );
+
+    return valid ? employeeId : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function onRequestGet({ request, env }) {
+  try {
+    const token = getEmployeeCookie(request);
+
+    const employeeId = await verifyEmployeeSession(
+      token,
+      env.EMPLOYEE_SESSION_SECRET
+    );
+
+    if (!employeeId) {
+      return json({ error: "جلسة الموظف غير صالحة" }, 401);
+    }
+
+    const employee = await env[DB_BINDING].prepare(
+      `SELECT id, full_name, username
+       FROM employees
+       WHERE id = ? AND is_active = 1`
+    ).bind(employeeId).first();
+
+    if (!employee) {
+      return json({ error: "الحساب غير نشط أو غير موجود" }, 401);
+    }
+
+    return json({
+      success: true,
+      employee
+    });
+  } catch {
+    return json({ error: "حدث خطأ أثناء التحقق من الجلسة" }, 500);
+  }
+}
