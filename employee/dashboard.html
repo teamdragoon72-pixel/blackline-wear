@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة الموظف | BLACK LINE</title>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body {
+      margin: 0;
+      background: #090909;
+      color: white;
+      min-height: 100vh;
+    }
+    header {
+      background: #151515;
+      border-bottom: 1px solid #333;
+      padding: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .logo { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
+    main { max-width: 1000px; margin: 35px auto; padding: 20px; }
+    .welcome, .panel {
+      background: #171717;
+      border: 1px solid #303030;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 25px; }
+    .muted { color: #aaa; line-height: 1.8; }
+    .name { color: #fff; font-weight: bold; }
+    button {
+      background: white;
+      color: black;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #status { color: #aaa; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">BLACK LINE</div>
+  <div>EMPLOYEE DASHBOARD</div>
+</header>
+
+<main>
+  <section class="welcome">
+    <h1>أهلاً بيك في BLACK LINE</h1>
+    <p class="muted">
+      مرحباً <span class="name" id="employeeName">...</span>
+    </p>
+    <p class="muted">تم تسجيل دخولك بنجاح.</p>
+  </section>
+
+  <section class="panel">
+    <h2>لوحة متابعة الموظف</h2>
+    <p class="muted">
+      تم تجهيز حسابك بنجاح. نظام عرض الطلبات وتسجيل مكالمات العملاء
+      ومواعيد المتابعة سيتم إضافته في الخطوة التالية.
+    </p>
+    <div id="status">جاري التحقق من جلسة الدخول...</div>
+  </section>
+</main>
+
+<script>
+async function checkEmployeeSession() {
+  const status = document.getElementById("status");
+
+  try {
+    const response = await fetch("/api/employee", {
+      method: "GET",
+      credentials: "same-origin"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      window.location.replace("/employee/");
+      return;
+    }
+
+    const employee = data.employee;
+    document.getElementById("employeeName").textContent =
+      employee.full_name || employee.name || employee.username;
+
+    status.textContent = "حسابك نشط وجلسة الدخول صالحة.";
+    status.style.color = "#71dc91";
+
+  } catch (error) {
+    status.textContent = "تعذر الاتصال بالسيرفر. حدّث الصفحة وحاول مرة أخرى.";
+  }
+}
+
+checkEmployeeSession();
+</script>
+
+</body>
+</html>
