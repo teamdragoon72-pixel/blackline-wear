@@ -5,36 +5,69 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>لوحة الموظف | BLACK LINE</title>
+
   <style>
-    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
     body {
       margin: 0;
       background: #090909;
       color: white;
       min-height: 100vh;
     }
+
     header {
       background: #151515;
       border-bottom: 1px solid #333;
-      padding: 22px;
+      padding: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 15px;
     }
-    .logo { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
-    main { max-width: 1000px; margin: 35px auto; padding: 20px; }
-    .welcome, .panel {
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 15px;
+    }
+
+    .welcome, .panel, .order-card {
       background: #171717;
       border: 1px solid #303030;
       border-radius: 14px;
-      padding: 25px;
+      padding: 22px;
       margin-bottom: 20px;
     }
-    h1 { font-size: 25px; }
-    .muted { color: #aaa; line-height: 1.8; }
-    .name { color: #fff; font-weight: bold; }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 21px;
+    }
+
+    .muted {
+      color: #aaa;
+      line-height: 1.8;
+    }
+
+    .name {
+      color: white;
+      font-weight: bold;
+    }
+
     button {
       background: white;
       color: black;
@@ -44,9 +77,143 @@
       font-weight: bold;
       cursor: pointer;
     }
-    #status { color: #aaa; margin-top: 15px; }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      background: #202020;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 25px;
+      margin-top: 8px;
+    }
+
+    .order-card {
+      background: #202020;
+      border-color: #383838;
+    }
+
+    .order-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid #383838;
+      padding-bottom: 14px;
+      margin-bottom: 15px;
+    }
+
+    .order-number {
+      font-size: 19px;
+      font-weight: bold;
+    }
+
+    .status-badge {
+      background: #333;
+      color: #ffd477;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 13px;
+    }
+
+    .detail {
+      background: #181818;
+      border-radius: 8px;
+      padding: 12px;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+    }
+
+    .detail small {
+      display: block;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .detail strong {
+      color: white;
+    }
+
+    .total {
+      color: #71dc91 !important;
+      font-size: 20px;
+    }
+
+    .empty, .error {
+      text-align: center;
+      padding: 30px 15px;
+      color: #aaa;
+      line-height: 1.8;
+    }
+
+    .error {
+      color: #ff7777;
+    }
+
+    #status {
+      color: #aaa;
+      margin-top: 15px;
+      line-height: 1.8;
+    }
+
+    .phone-link {
+      color: #71dc91;
+      text-decoration: none;
+      direction: ltr;
+      display: inline-block;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 16px;
+      }
+
+      .logo {
+        font-size: 20px;
+      }
+
+      main {
+        padding: 12px;
+      }
+
+      .welcome, .panel, .order-card {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -55,54 +222,296 @@
 </header>
 
 <main>
+
   <section class="welcome">
     <h1>أهلاً بيك في BLACK LINE</h1>
+
     <p class="muted">
       مرحباً <span class="name" id="employeeName">...</span>
     </p>
-    <p class="muted">تم تسجيل دخولك بنجاح.</p>
+
+    <p class="muted">لوحة متابعة الطلبات الخاصة بحسابك.</p>
+
+    <div id="status">جاري التحقق من جلسة الدخول...</div>
   </section>
 
   <section class="panel">
-    <h2>لوحة متابعة الموظف</h2>
-    <p class="muted">
-      تم تجهيز حسابك بنجاح. نظام عرض الطلبات وتسجيل مكالمات العملاء
-      ومواعيد المتابعة سيتم إضافته في الخطوة التالية.
-    </p>
-    <div id="status">جاري التحقق من جلسة الدخول...</div>
+
+    <div class="section-head">
+      <h2>طلباتي المسندة إليّ</h2>
+      <button id="refreshButton" onclick="loadOrders()" disabled>
+        تحديث الطلبات
+      </button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="muted">إجمالي الطلبات</span>
+        <strong id="totalOrders">0</strong>
+      </div>
+
+      <div class="stat">
+        <span class="muted">إجمالي قيمة الطلبات</span>
+        <strong id="totalSales">0</strong>
+      </div>
+    </div>
+
+    <div id="ordersContainer">
+      <div class="empty">جاري تحميل الطلبات...</div>
+    </div>
+
   </section>
+
 </main>
 
 <script>
-async function checkEmployeeSession() {
-  const status = document.getElementById("status");
+const employeeName = document.getElementById("employeeName");
+const statusBox = document.getElementById("status");
+const ordersContainer = document.getElementById("ordersContainer");
+const refreshButton = document.getElementById("refreshButton");
 
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    };
+
+    return entities[character];
+  });
+}
+
+function formatMoney(value) {
+  return Number(value || 0).toLocaleString("en-US") + " جنيه";
+}
+
+function formatDate(value) {
+  if (!value) return "غير متاح";
+
+  const date = new Date(value.replace(" ", "T"));
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleString("ar-EG");
+}
+
+function translateStatus(status) {
+  const statuses = {
+    pending: "طلب جديد",
+    processing: "قيد التجهيز",
+    shipped: "تم الشحن",
+    delivered: "تم التسليم",
+    cancelled: "ملغي",
+    new: "طلب جديد"
+  };
+
+  return statuses[status] || status || "غير محدد";
+}
+
+async function checkEmployeeSession() {
   try {
     const response = await fetch("/api/employee", {
       method: "GET",
-      credentials: "same-origin"
+      credentials: "same-origin",
+      cache: "no-store"
     });
 
     const data = await response.json();
 
     if (!response.ok || !data.success) {
       window.location.replace("/employee/");
-      return;
+      return false;
     }
 
     const employee = data.employee;
-    document.getElementById("employeeName").textContent =
+
+    employeeName.textContent =
       employee.full_name || employee.name || employee.username;
 
-    status.textContent = "حسابك نشط وجلسة الدخول صالحة.";
-    status.style.color = "#71dc91";
+    statusBox.textContent = "حسابك نشط وجلسة الدخول صالحة.";
+    statusBox.style.color = "#71dc91";
+
+    refreshButton.disabled = false;
+
+    return true;
 
   } catch (error) {
-    status.textContent = "تعذر الاتصال بالسيرفر. حدّث الصفحة وحاول مرة أخرى.";
+    statusBox.textContent =
+      "تعذر الاتصال بالسيرفر. حدّث الصفحة وحاول مرة أخرى.";
+
+    statusBox.style.color = "#ff7777";
+
+    return false;
   }
 }
 
-checkEmployeeSession();
+function renderOrders(orders) {
+  if (!orders.length) {
+    ordersContainer.innerHTML = `
+      <div class="empty">
+        <h3>لا توجد طلبات مسندة إليك حاليًا</h3>
+        <p>عندما يتم توزيع طلب جديد على حسابك سيظهر هنا.</p>
+      </div>
+    `;
+
+    document.getElementById("totalOrders").textContent = "0";
+    document.getElementById("totalSales").textContent = "0 جنيه";
+
+    return;
+  }
+
+  const totalSales = orders.reduce(
+    (sum, order) => sum + Number(order.total || 0),
+    0
+  );
+
+  document.getElementById("totalOrders").textContent =
+    orders.length.toLocaleString("en-US");
+
+  document.getElementById("totalSales").textContent =
+    formatMoney(totalSales);
+
+  ordersContainer.innerHTML = orders.map(order => `
+    <article class="order-card">
+
+      <div class="order-head">
+        <div class="order-number">
+          طلب رقم #${escapeHTML(order.id)}
+        </div>
+
+        <span class="status-badge">
+          ${escapeHTML(translateStatus(order.status))}
+        </span>
+      </div>
+
+      <div class="details">
+
+        <div class="detail">
+          <small>اسم العميل</small>
+          <strong>${escapeHTML(order.customer_name)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>رقم الهاتف</small>
+          <strong>
+            <a class="phone-link"
+               href="tel:${escapeHTML(order.phone)}"
+               dir="ltr">
+              ${escapeHTML(order.phone)}
+            </a>
+          </strong>
+        </div>
+
+        <div class="detail">
+          <small>العنوان</small>
+          <strong>${escapeHTML(order.address)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>المنتج</small>
+          <strong>${escapeHTML(order.product_name)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>المقاس</small>
+          <strong>${escapeHTML(order.size)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>اللون</small>
+          <strong>${escapeHTML(order.color)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>الكمية</small>
+          <strong>${escapeHTML(order.quantity)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>سعر القطعة</small>
+          <strong>${formatMoney(order.price)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>الإجمالي</small>
+          <strong class="total">${formatMoney(order.total)}</strong>
+        </div>
+
+        <div class="detail">
+          <small>تاريخ الطلب</small>
+          <strong>${escapeHTML(formatDate(order.created_at))}</strong>
+        </div>
+
+        <div class="detail">
+          <small>موعد آخر متابعة</small>
+          <strong>
+            ${escapeHTML(formatDate(order.next_followup_at))}
+          </strong>
+        </div>
+
+      </div>
+
+    </article>
+  `).join("");
+}
+
+async function loadOrders() {
+  refreshButton.disabled = true;
+  refreshButton.textContent = "جاري التحديث...";
+
+  ordersContainer.innerHTML =
+    '<div class="empty">جاري تحميل الطلبات...</div>';
+
+  try {
+    const response = await fetch("/api/employee/orders", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    if (response.status === 401) {
+      window.location.replace("/employee/");
+      return;
+    }
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "تعذر تحميل الطلبات");
+    }
+
+    renderOrders(data.orders || []);
+
+    statusBox.textContent =
+      "تم تحميل طلباتك بنجاح.";
+
+    statusBox.style.color = "#71dc91";
+
+  } catch (error) {
+    ordersContainer.innerHTML = `
+      <div class="error">
+        ${escapeHTML(error.message || "حدث خطأ أثناء تحميل الطلبات")}
+      </div>
+    `;
+
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.textContent = "تحديث الطلبات";
+  }
+}
+
+async function startDashboard() {
+  const validSession = await checkEmployeeSession();
+
+  if (validSession) {
+    await loadOrders();
+  }
+}
+
+startDashboard();
 </script>
 
 </body>
