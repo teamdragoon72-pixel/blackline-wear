@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دخول الموظفين | BLACK LINE</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #090909;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      background: #151515;
+      border: 1px solid #303030;
+      border-radius: 18px;
+      padding: 35px 25px;
+      box-shadow: 0 15px 50px #000;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 34px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #999;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 9px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 20px;
+      background: #242424;
+      color: white;
+      border: 1px solid #393939;
+      border-radius: 9px;
+      outline: none;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 9px;
+      background: white;
+      color: black;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    #message {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .error {
+      color: #ff6868;
+    }
+
+    .success {
+      color: #71dc91;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 28px;
+      color: #666;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="login-box">
+    <div class="logo">BLACK LINE</div>
+    <div class="subtitle">EMPLOYEE PORTAL</div>
+
+    <form id="loginForm">
+      <label for="username">اسم المستخدم</label>
+      <input
+        id="username"
+        type="text"
+        placeholder="اكتب اسم المستخدم"
+        autocomplete="username"
+        required
+      >
+
+      <label for="password">كلمة المرور</label>
+      <input
+        id="password"
+        type="password"
+        placeholder="اكتب كلمة المرور"
+        autocomplete="current-password"
+        required
+      >
+
+      <button type="submit" id="loginButton">
+        تسجيل الدخول
+      </button>
+    </form>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <div class="footer">
+      BLACK LINE WEAR © جميع الحقوق محفوظة
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const button = document.getElementById("loginButton");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      button.disabled = true;
+      button.textContent = "جاري تسجيل الدخول...";
+      message.textContent = "";
+      message.className = "";
+
+      try {
+        const response = await fetch("/api/employee", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "تعذر تسجيل الدخول");
+        }
+
+        message.textContent = "تم تسجيل الدخول بنجاح";
+        message.className = "success";
+
+        window.location.href = "/employee/dashboard.html";
+
+      } catch (error) {
+        message.textContent = error.message || "حدث خطأ أثناء تسجيل الدخول";
+        message.className = "error";
+
+      } finally {
+        button.disabled = false;
+        button.textContent = "تسجيل الدخول";
+      }
+    });
+  </script>
+
+</body>
+</html>
