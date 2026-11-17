@@ -745,12 +745,42 @@
             "performance-number"
           );
 
-          card.appendChild(followupsCount);
+         card.appendChild(followupsCount);
 
-          addText(
-            card,
-            "p",
-            "آخر نتيجة: " +
+// عدد الطلبات المؤكدة
+const confirmedCount = document.createElement("p");
+confirmedCount.appendChild(
+  document.createTextNode("الطلبات المؤكدة: ")
+);
+
+addText(
+  confirmedCount,
+  "span",
+  Number(employee.confirmed_orders || 0),
+  "performance-number"
+);
+
+card.appendChild(confirmedCount);
+
+// عدد المتابعات المتأخرة
+const overdueCount = document.createElement("p");
+overdueCount.appendChild(
+  document.createTextNode("المتابعات المتأخرة: ")
+);
+
+addText(
+  overdueCount,
+  "span",
+  Number(employee.overdue_followups || 0),
+  "overdue-number"
+);
+
+card.appendChild(overdueCount);
+
+addText(
+  card,
+  "p",
+  "آخر نتيجة: " +
             (
               employee.latest_outcome
                 ? outcomeNames[employee.latest_outcome] ||
