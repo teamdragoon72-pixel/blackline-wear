@@ -1,4 +1,4 @@
-
+```js
 const DB_BINDING = "blackline-wear-orders";
 
 function json(data, status = 200) {
@@ -32,6 +32,28 @@ export async function onRequestGet({ env }) {
           FROM order_followups f
           WHERE f.employee_id = e.id
         ) AS total_followups,
+
+        (
+          SELECT COUNT(DISTINCT f.order_id)
+          FROM order_followups f
+          WHERE f.employee_id = e.id
+            AND f.outcome = 'confirmed'
+        ) AS confirmed_orders,
+
+        (
+          SELECT COUNT(*)
+          FROM order_followups f
+          WHERE f.employee_id = e.id
+            AND f.outcome = 'needs_followup'
+            AND f.next_followup_at IS NOT NULL
+            AND datetime(f.next_followup_at) <= datetime('now')
+            AND f.id = (
+              SELECT MAX(f2.id)
+              FROM order_followups f2
+              WHERE f2.employee_id = f.employee_id
+                AND f2.order_id = f.order_id
+            )
+        ) AS overdue_followups,
 
         (
           SELECT f.outcome
@@ -74,3 +96,4 @@ export async function onRequestGet({ env }) {
     }, 500);
   }
 }
+```
