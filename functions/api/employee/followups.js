@@ -1,16 +1,21 @@
 
 const DB_BINDING = "blackline-wear-orders";
 const COOKIE_NAME = "blw_employee";
+const IDLE_MINUTES = 20;
 
-function json(data, status = 200) {
+function json(data, status = 200, headers = {}) {
   return Response.json(data, {
     status,
-    headers: { "Cache-Control": "no-store" }
+    headers: {
+      "Cache-Control": "no-store",
+      ...headers
+    }
   });
 }
 
 function getCookie(request) {
   const cookies = request.headers.get("Cookie") || "";
+
   const entry = cookies.split(";")
     .map(x => x.trim())
     .find(x => x.startsWith(COOKIE_NAME + "="));
@@ -65,6 +70,40 @@ async function verifySession(token, secret) {
   }
 }
 
+function toBase64Url(bytes) {
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+async function createSession(employeeId, secret) {
+  const expiry = Date.now() + IDLE_MINUTES * 60 * 1000;
+  const message = `${employeeId}.${expiry}`;
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(message)
+  );
+
+  return `${message}.${toBase64Url(new Uint8Array(signature))}`;
+}
+
 async function getActiveEmployee(request, env) {
   const employeeId = await verifySession(
     getCookie(request),
@@ -79,6 +118,12 @@ async function getActiveEmployee(request, env) {
     WHERE id = ? AND is_active = 1
     LIMIT 1
   `).bind(employeeId).first();
+}
+
+async function sessionCookie(employeeId, secret) {
+  const token = await createSession(employeeId, secret);
+
+  return `${COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/api/employee; Max-Age=1200`;
 }
 
 const CONTACT_METHODS = ["call", "whatsapp", "other"];
@@ -97,14 +142,20 @@ export async function onRequestPost({ request, env }) {
   try {
     const db = env[DB_BINDING];
 
-    if (!db) {
-      return json({ success: false, error: "Database binding not found" }, 500);
+    if (!db || !env.EMPLOYEE_SESSION_SECRET) {
+      return json({
+        success: false,
+        error: "إعدادات النظام غير مكتملة"
+      }, 500);
     }
 
     const employee = await getActiveEmployee(request, env);
 
     if (!employee) {
-      return json({ success: false, error: "جلسة الموظف غير صالحة" }, 401);
+      return json({
+        success: false,
+        error: "انتهت جلسة الدخول، سجل دخولك مرة أخرى"
+      }, 401);
     }
 
     const body = await request.json();
@@ -113,24 +164,37 @@ export async function onRequestPost({ request, env }) {
     const contactMethod = String(body.contact_method || "");
     const outcome = String(body.outcome || "");
     const notes = String(body.notes || "").trim();
+
     const nextFollowupAt = body.next_followup_at
       ? String(body.next_followup_at).trim()
       : null;
 
     if (!Number.isInteger(orderId) || orderId <= 0) {
-      return json({ success: false, error: "رقم الطلب غير صحيح" }, 400);
+      return json({
+        success: false,
+        error: "رقم الطلب غير صحيح"
+      }, 400);
     }
 
     if (!CONTACT_METHODS.includes(contactMethod)) {
-      return json({ success: false, error: "طريقة التواصل غير صحيحة" }, 400);
+      return json({
+        success: false,
+        error: "طريقة التواصل غير صحيحة"
+      }, 400);
     }
 
     if (!OUTCOMES.includes(outcome)) {
-      return json({ success: false, error: "نتيجة التواصل غير صحيحة" }, 400);
+      return json({
+        success: false,
+        error: "نتيجة التواصل غير صحيحة"
+      }, 400);
     }
 
     if (notes.length > 2000) {
-      return json({ success: false, error: "الملاحظات طويلة جدًا" }, 400);
+      return json({
+        success: false,
+        error: "الملاحظات طويلة جدًا"
+      }, 400);
     }
 
     if (
@@ -140,7 +204,10 @@ export async function onRequestPost({ request, env }) {
         !Number.isFinite(Date.parse(nextFollowupAt))
       )
     ) {
-      return json({ success: false, error: "موعد المتابعة غير صحيح" }, 400);
+      return json({
+        success: false,
+        error: "موعد المتابعة غير صحيح"
+      }, 400);
     }
 
     const assignedOrder = await db.prepare(`
@@ -180,6 +247,11 @@ export async function onRequestPost({ request, env }) {
       success: true,
       message: "تم حفظ المتابعة بنجاح",
       followup_id: result.meta.last_row_id
+    }, 200, {
+      "Set-Cookie": await sessionCookie(
+        employee.id,
+        env.EMPLOYEE_SESSION_SECRET
+      )
     });
 
   } catch (error) {
@@ -194,21 +266,30 @@ export async function onRequestGet({ request, env }) {
   try {
     const db = env[DB_BINDING];
 
-    if (!db) {
-      return json({ success: false, error: "Database binding not found" }, 500);
+    if (!db || !env.EMPLOYEE_SESSION_SECRET) {
+      return json({
+        success: false,
+        error: "إعدادات النظام غير مكتملة"
+      }, 500);
     }
 
     const employee = await getActiveEmployee(request, env);
 
     if (!employee) {
-      return json({ success: false, error: "جلسة الموظف غير صالحة" }, 401);
+      return json({
+        success: false,
+        error: "انتهت جلسة الدخول، سجل دخولك مرة أخرى"
+      }, 401);
     }
 
     const url = new URL(request.url);
     const orderId = Number(url.searchParams.get("order_id"));
 
     if (!Number.isInteger(orderId) || orderId <= 0) {
-      return json({ success: false, error: "أرسل رقم طلب صحيح" }, 400);
+      return json({
+        success: false,
+        error: "أرسل رقم طلب صحيح"
+      }, 400);
     }
 
     const assignedOrder = await db.prepare(`
@@ -242,6 +323,11 @@ export async function onRequestGet({ request, env }) {
     return json({
       success: true,
       followups: result.results || []
+    }, 200, {
+      "Set-Cookie": await sessionCookie(
+        employee.id,
+        env.EMPLOYEE_SESSION_SECRET
+      )
     });
 
   } catch (error) {
