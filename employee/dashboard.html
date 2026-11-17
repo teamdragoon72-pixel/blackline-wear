@@ -7,30 +7,17 @@
   <title>لوحة الموظف | BLACK LINE</title>
   <style>
     * { box-sizing: border-box; font-family: Arial, sans-serif; }
-    body {
-      margin: 0;
-      background: #090909;
-      color: white;
-      min-height: 100vh;
-    }
+    body { margin: 0; background: #090909; color: white; min-height: 100vh; }
     header {
-      background: #151515;
-      border-bottom: 1px solid #333;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 15px;
+      background: #151515; border-bottom: 1px solid #333;
+      padding: 20px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 15px;
     }
     .logo { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
     main { max-width: 1100px; margin: 25px auto; padding: 15px; }
     .welcome, .panel, .order-card {
-      background: #171717;
-      border: 1px solid #303030;
-      border-radius: 14px;
-      padding: 22px;
-      margin-bottom: 18px;
+      background: #171717; border: 1px solid #303030;
+      border-radius: 14px; padding: 22px; margin-bottom: 18px;
     }
     h1 { font-size: 24px; margin-top: 0; }
     h2 { font-size: 20px; }
@@ -38,99 +25,55 @@
     .muted { color: #aaa; line-height: 1.8; }
     .name { color: white; font-weight: bold; }
     button {
-      background: white;
-      color: black;
-      border: 0;
-      border-radius: 8px;
-      padding: 12px 18px;
-      font-weight: bold;
-      cursor: pointer;
+      background: white; color: black; border: 0; border-radius: 8px;
+      padding: 12px 18px; font-weight: bold; cursor: pointer;
     }
     button:disabled { opacity: .5; cursor: not-allowed; }
     .secondary { background: #333; color: white; }
     .logout-button { background: #a83232; color: white; }
     .session-info {
-      display: inline-block;
-      margin: 12px 0;
-      padding: 9px 13px;
-      border: 1px solid #444;
-      border-radius: 8px;
-      background: #202020;
-      color: #ddd;
-      font-size: 14px;
+      display: inline-block; margin: 12px 0; padding: 9px 13px;
+      border: 1px solid #444; border-radius: 8px;
+      background: #202020; color: #ddd; font-size: 14px;
     }
     .session-info strong { color: #71dc91; }
     .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px; margin-bottom: 20px;
     }
     .stat {
-      background: #202020;
-      border: 1px solid #333;
-      border-radius: 10px;
-      padding: 16px;
-      text-align: center;
+      background: #202020; border: 1px solid #333;
+      border-radius: 10px; padding: 16px; text-align: center;
     }
     .stat strong { display: block; font-size: 25px; margin-top: 8px; }
     .details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin: 18px 0;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px; margin: 18px 0;
     }
     .detail {
-      background: #222;
-      padding: 12px;
-      border-radius: 9px;
-      color: #ddd;
-      line-height: 1.8;
-      overflow-wrap: anywhere;
+      background: #222; padding: 12px; border-radius: 9px;
+      color: #ddd; line-height: 1.8; overflow-wrap: anywhere;
     }
     .detail b { color: #aaa; display: block; font-size: 13px; }
     .status {
-      display: inline-block;
-      background: #292929;
-      border: 1px solid #444;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 13px;
+      display: inline-block; background: #292929; border: 1px solid #444;
+      padding: 6px 12px; border-radius: 20px; font-size: 13px;
     }
-    .followup {
-      border-top: 1px solid #383838;
-      margin-top: 20px;
-      padding-top: 15px;
-    }
-    label {
-      display: block;
-      margin: 12px 0 7px;
-      color: #ddd;
-      font-size: 14px;
-    }
+    .followup { border-top: 1px solid #383838; margin-top: 20px; padding-top: 15px; }
+    label { display: block; margin: 12px 0 7px; color: #ddd; font-size: 14px; }
     input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      background: #101010;
-      color: white;
-      outline: none;
-      font-size: 15px;
+      width: 100%; padding: 12px; border-radius: 8px;
+      border: 1px solid #444; background: #101010;
+      color: white; outline: none; font-size: 15px;
     }
     textarea { min-height: 85px; resize: vertical; }
     .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 12px;
     }
     .history-item {
-      background: #222;
-      border-right: 3px solid #777;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-      line-height: 1.8;
+      background: #222; border-right: 3px solid #777; padding: 12px;
+      border-radius: 8px; margin-top: 10px; line-height: 1.8;
     }
     .message { margin-top: 12px; color: #aaa; font-size: 14px; }
     .success { color: #71dc91; }
@@ -154,9 +97,7 @@
 <main>
   <section class="welcome">
     <h1>أهلاً بيك في BLACK LINE</h1>
-    <p class="muted">
-      مرحباً <span class="name" id="employeeName">...</span>
-    </p>
+    <p class="muted">مرحباً <span class="name" id="employeeName">...</span></p>
     <p class="muted">دي لوحة متابعة الطلبات الخاصة بيك.</p>
 
     <div class="session-info">
@@ -186,12 +127,17 @@
 
 <script>
 const INACTIVITY_LIMIT = 20 * 60 * 1000;
+const HEARTBEAT_INTERVAL = 15000;
+const RECENT_ACTIVITY_WINDOW = 30000;
 
 let currentEmployee = null;
 let orders = [];
 let lastActivityTime = Date.now();
+let lastHeartbeatActivityTime = 0;
 let inactivityTimer = null;
 let countdownTimer = null;
+let heartbeatTimer = null;
+let heartbeatInProgress = false;
 let isLoggingOut = false;
 
 const statusNames = {
@@ -244,45 +190,6 @@ function setStatus(message, type = "") {
   element.className = "message " + type;
 }
 
-// تسجيل النشاط وتجديد مهلة العشرين دقيقة
-function recordActivity() {
-  if (!currentEmployee || isLoggingOut) return;
-
-  lastActivityTime = Date.now();
-  updateCountdown();
-}
-
-// بدء مراقبة النشاط
-function startInactivityMonitor() {
-  const activityEvents = [
-    "mousemove",
-    "mousedown",
-    "keydown",
-    "scroll",
-    "touchstart",
-    "click"
-  ];
-
-  activityEvents.forEach(eventName => {
-    document.addEventListener(eventName, recordActivity, {
-      passive: true
-    });
-  });
-
-  lastActivityTime = Date.now();
-
-  countdownTimer = setInterval(updateCountdown, 1000);
-
-  inactivityTimer = setInterval(() => {
-    const inactiveFor = Date.now() - lastActivityTime;
-
-    if (inactiveFor >= INACTIVITY_LIMIT) {
-      logoutEmployee("انتهت الجلسة بسبب عدم النشاط لمدة 20 دقيقة.");
-    }
-  }, 1000);
-}
-
-// تحديث العداد
 function updateCountdown() {
   const remaining = Math.max(
     0,
@@ -292,25 +199,121 @@ function updateCountdown() {
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000);
 
-  const display =
-    String(minutes).padStart(2, "0") + ":" +
-    String(seconds).padStart(2, "0");
-
   const countdown = document.getElementById("sessionCountdown");
 
   if (countdown) {
-    countdown.textContent = display;
-    countdown.style.color = remaining <= 60000 ? "#ff7777" : "#71dc91";
+    countdown.textContent =
+      String(minutes).padStart(2, "0") + ":" +
+      String(seconds).padStart(2, "0");
+
+    countdown.style.color =
+      remaining <= 60000 ? "#ff7777" : "#71dc91";
+  }
+
+  return remaining;
+}
+
+function recordActivity() {
+  if (!currentEmployee || isLoggingOut) return;
+
+  const now = Date.now();
+
+  // لو رجع بعد انتهاء العشرين دقيقة، لا نسمح بتجديد الجلسة
+  if (now - lastActivityTime >= INACTIVITY_LIMIT) {
+    logoutEmployee("انتهت الجلسة بسبب عدم النشاط لمدة 20 دقيقة.");
+    return;
+  }
+
+  lastActivityTime = now;
+  updateCountdown();
+}
+
+async function sendHeartbeat() {
+  if (
+    !currentEmployee ||
+    isLoggingOut ||
+    heartbeatInProgress
+  ) return;
+
+  const now = Date.now();
+
+  if (now - lastActivityTime >= INACTIVITY_LIMIT) {
+    logoutEmployee("انتهت الجلسة بسبب عدم النشاط لمدة 20 دقيقة.");
+    return;
+  }
+
+  // لا نرسل نبضات إلا إذا كان هناك نشاط حديث
+  if (now - lastActivityTime > RECENT_ACTIVITY_WINDOW) return;
+
+  if (lastHeartbeatActivityTime >= lastActivityTime) return;
+
+  heartbeatInProgress = true;
+  lastHeartbeatActivityTime = lastActivityTime;
+
+  try {
+    const response = await fetch("/api/employee", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    if (response.status === 401 || !response.ok || !data.success) {
+      logoutEmployee("انتهت جلسة الدخول، سجل دخولك مرة أخرى.");
+      return;
+    }
+
+    currentEmployee = data.employee;
+
+  } catch (error) {
+    // لا نخرج الموظف بسبب انقطاع مؤقت في الإنترنت.
+    // لكن السيرفر سيظل يرفض الجلسة إذا انتهت صلاحيتها.
+    console.error("Session heartbeat failed:", error);
+  } finally {
+    heartbeatInProgress = false;
   }
 }
 
-// إيقاف مراقبة النشاط
-function stopInactivityMonitor() {
-  if (inactivityTimer) clearInterval(inactivityTimer);
-  if (countdownTimer) clearInterval(countdownTimer);
+function startInactivityMonitor() {
+  const activityEvents = [
+    "mousemove",
+    "mousedown",
+    "keydown",
+    "scroll",
+    "touchstart",
+    "click",
+    "input",
+    "change"
+  ];
+
+  activityEvents.forEach(eventName => {
+    document.addEventListener(eventName, recordActivity, {
+      passive: true
+    });
+  });
+
+  lastActivityTime = Date.now();
+  lastHeartbeatActivityTime = 0;
+
+  countdownTimer = setInterval(() => {
+    const remaining = updateCountdown();
+
+    if (remaining <= 0) {
+      logoutEmployee("انتهت الجلسة بسبب عدم النشاط لمدة 20 دقيقة.");
+    }
+  }, 1000);
+
+  // تجديد الجلسة من السيرفر أثناء وجود نشاط حديث
+  heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
 }
 
-// تسجيل الخروج
+function stopInactivityMonitor() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+  if (inactivityTimer) clearInterval(inactivityTimer);
+}
+
 async function logoutEmployee(reason = "تم تسجيل الخروج بنجاح.") {
   if (isLoggingOut) return;
 
@@ -318,6 +321,7 @@ async function logoutEmployee(reason = "تم تسجيل الخروج بنجاح.
   stopInactivityMonitor();
 
   const button = document.getElementById("logoutButton");
+
   if (button) {
     button.disabled = true;
     button.textContent = "جاري تسجيل الخروج...";
@@ -326,7 +330,8 @@ async function logoutEmployee(reason = "تم تسجيل الخروج بنجاح.
   try {
     await fetch("/api/employee", {
       method: "DELETE",
-      credentials: "same-origin"
+      credentials: "same-origin",
+      cache: "no-store"
     });
   } catch (error) {
     console.error("Logout request failed:", error);
@@ -340,7 +345,8 @@ async function checkEmployeeSession() {
   try {
     const response = await fetch("/api/employee", {
       method: "GET",
-      credentials: "same-origin"
+      credentials: "same-origin",
+      cache: "no-store"
     });
 
     const data = await response.json();
@@ -360,7 +366,6 @@ async function checkEmployeeSession() {
     setStatus("حسابك نشط وجلسة الدخول صالحة.", "success");
 
     startInactivityMonitor();
-
     await loadOrders();
 
   } catch (error) {
@@ -369,18 +374,21 @@ async function checkEmployeeSession() {
 }
 
 async function loadOrders() {
+  if (isLoggingOut) return;
+
   const container = document.getElementById("ordersContainer");
   container.textContent = "جاري تحميل الطلبات...";
 
   try {
     const response = await fetch("/api/employee/orders", {
-      credentials: "same-origin"
+      credentials: "same-origin",
+      cache: "no-store"
     });
 
     const data = await response.json();
 
     if (response.status === 401 || response.status === 403) {
-      window.location.replace("/employee/");
+      logoutEmployee("انتهت جلسة الدخول، سجل دخولك مرة أخرى.");
       return;
     }
 
@@ -391,24 +399,30 @@ async function loadOrders() {
     orders = Array.isArray(data.orders) ? data.orders : [];
 
     document.getElementById("totalOrders").textContent = orders.length;
+
     document.getElementById("pendingOrders").textContent =
-      orders.filter(order => ["pending", "new"].includes(order.status)).length;
+      orders.filter(order =>
+        ["pending", "new"].includes(order.status)
+      ).length;
+
     document.getElementById("followedOrders").textContent =
       orders.filter(order => order.latest_followup_outcome).length;
 
     if (!orders.length) {
-      container.innerHTML = '<div class="empty">مفيش طلبات مسندة ليك حالياً.</div>';
+      container.innerHTML =
+        '<div class="empty">مفيش طلبات مسندة ليك حالياً.</div>';
       return;
     }
 
     container.innerHTML = orders.map(renderOrder).join("");
-
     setStatus("تم تحميل الطلبات بنجاح.", "success");
 
     orders.forEach(order => loadFollowups(order.id));
 
   } catch (error) {
-    container.textContent = error.message || "حدث خطأ أثناء تحميل الطلبات.";
+    container.textContent =
+      error.message || "حدث خطأ أثناء تحميل الطلبات.";
+
     setStatus("تعذر تحميل الطلبات.", "error");
   }
 }
@@ -491,18 +505,21 @@ function renderOrder(order) {
 
 async function loadFollowups(orderId) {
   const container = document.getElementById("history-" + orderId);
-  if (!container) return;
+  if (!container || isLoggingOut) return;
 
   try {
     const response = await fetch(
       "/api/employee/followups?order_id=" + encodeURIComponent(orderId),
-      { credentials: "same-origin" }
+      {
+        credentials: "same-origin",
+        cache: "no-store"
+      }
     );
 
     const data = await response.json();
 
     if (response.status === 401 || response.status === 403) {
-      window.location.replace("/employee/");
+      logoutEmployee("انتهت جلسة الدخول، سجل دخولك مرة أخرى.");
       return;
     }
 
@@ -513,7 +530,8 @@ async function loadFollowups(orderId) {
     const followups = Array.isArray(data.followups) ? data.followups : [];
 
     if (!followups.length) {
-      container.innerHTML = '<p class="muted">لا توجد متابعات مسجلة لهذا الطلب حتى الآن.</p>';
+      container.innerHTML =
+        '<p class="muted">لا توجد متابعات مسجلة لهذا الطلب حتى الآن.</p>';
       return;
     }
 
@@ -537,7 +555,8 @@ async function loadFollowups(orderId) {
     `).join("");
 
   } catch (error) {
-    container.textContent = error.message || "حدث خطأ أثناء تحميل السجل.";
+    container.textContent =
+      error.message || "حدث خطأ أثناء تحميل السجل.";
   }
 }
 
@@ -575,7 +594,7 @@ async function saveFollowup(event, orderId) {
     const data = await response.json();
 
     if (response.status === 401 || response.status === 403) {
-      window.location.replace("/employee/");
+      logoutEmployee("انتهت جلسة الدخول، سجل دخولك مرة أخرى.");
       return;
     }
 
@@ -598,6 +617,17 @@ async function saveFollowup(event, orderId) {
     button.disabled = false;
   }
 }
+
+// محاولة تسجيل الخروج عند إغلاق الصفحة أو مغادرتها
+window.addEventListener("pagehide", () => {
+  if (!currentEmployee || isLoggingOut) return;
+
+  fetch("/api/employee", {
+    method: "DELETE",
+    credentials: "same-origin",
+    keepalive: true
+  }).catch(() => {});
+});
 
 checkEmployeeSession();
 </script>
