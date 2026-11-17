@@ -1,4 +1,4 @@
-```js
+
 const DB_BINDING = "blackline-wear-orders";
 
 function json(data, status = 200) {
@@ -47,11 +47,18 @@ export async function onRequestGet({ env }) {
             AND f.outcome = 'needs_followup'
             AND f.next_followup_at IS NOT NULL
             AND datetime(f.next_followup_at) <= datetime('now')
-            AND f.id = (
-              SELECT MAX(f2.id)
+            AND NOT EXISTS (
+              SELECT 1
               FROM order_followups f2
               WHERE f2.employee_id = f.employee_id
                 AND f2.order_id = f.order_id
+                AND (
+                  f2.created_at > f.created_at
+                  OR (
+                    f2.created_at = f.created_at
+                    AND f2.id > f.id
+                  )
+                )
             )
         ) AS overdue_followups,
 
@@ -96,4 +103,3 @@ export async function onRequestGet({ env }) {
     }, 500);
   }
 }
-```
