@@ -48,6 +48,18 @@
     }
     button:disabled { opacity: .5; cursor: not-allowed; }
     .secondary { background: #333; color: white; }
+    .logout-button { background: #a83232; color: white; }
+    .session-info {
+      display: inline-block;
+      margin: 12px 0;
+      padding: 9px 13px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      background: #202020;
+      color: #ddd;
+      font-size: 14px;
+    }
+    .session-info strong { color: #71dc91; }
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -146,7 +158,17 @@
       مرحباً <span class="name" id="employeeName">...</span>
     </p>
     <p class="muted">دي لوحة متابعة الطلبات الخاصة بيك.</p>
-    <button class="secondary" onclick="loadOrders()">تحديث الطلبات</button>
+
+    <div class="session-info">
+      الخروج التلقائي بعد عدم النشاط:
+      <strong id="sessionCountdown">20:00</strong>
+    </div>
+
+    <div>
+      <button class="secondary" onclick="loadOrders()">تحديث الطلبات</button>
+      <button class="logout-button" id="logoutButton" onclick="logoutEmployee()">تسجيل الخروج</button>
+    </div>
+
     <div id="status" class="message">جاري التحقق من جلسة الدخول...</div>
   </section>
 
@@ -163,6 +185,15 @@
 </main>
 
 <script>
+const INACTIVITY_LIMIT = 20 * 60 * 1000;
+
+let currentEmployee = null;
+let orders = [];
+let lastActivityTime = Date.now();
+let inactivityTimer = null;
+let countdownTimer = null;
+let isLoggingOut = false;
+
 const statusNames = {
   pending: "طلب جديد",
   processing: "قيد التجهيز",
@@ -187,9 +218,6 @@ const methodNames = {
   whatsapp: "واتساب",
   other: "وسيلة أخرى"
 };
-
-let currentEmployee = null;
-let orders = [];
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -216,6 +244,98 @@ function setStatus(message, type = "") {
   element.className = "message " + type;
 }
 
+// تسجيل النشاط وتجديد مهلة العشرين دقيقة
+function recordActivity() {
+  if (!currentEmployee || isLoggingOut) return;
+
+  lastActivityTime = Date.now();
+  updateCountdown();
+}
+
+// بدء مراقبة النشاط
+function startInactivityMonitor() {
+  const activityEvents = [
+    "mousemove",
+    "mousedown",
+    "keydown",
+    "scroll",
+    "touchstart",
+    "click"
+  ];
+
+  activityEvents.forEach(eventName => {
+    document.addEventListener(eventName, recordActivity, {
+      passive: true
+    });
+  });
+
+  lastActivityTime = Date.now();
+
+  countdownTimer = setInterval(updateCountdown, 1000);
+
+  inactivityTimer = setInterval(() => {
+    const inactiveFor = Date.now() - lastActivityTime;
+
+    if (inactiveFor >= INACTIVITY_LIMIT) {
+      logoutEmployee("انتهت الجلسة بسبب عدم النشاط لمدة 20 دقيقة.");
+    }
+  }, 1000);
+}
+
+// تحديث العداد
+function updateCountdown() {
+  const remaining = Math.max(
+    0,
+    INACTIVITY_LIMIT - (Date.now() - lastActivityTime)
+  );
+
+  const minutes = Math.floor(remaining / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+
+  const display =
+    String(minutes).padStart(2, "0") + ":" +
+    String(seconds).padStart(2, "0");
+
+  const countdown = document.getElementById("sessionCountdown");
+
+  if (countdown) {
+    countdown.textContent = display;
+    countdown.style.color = remaining <= 60000 ? "#ff7777" : "#71dc91";
+  }
+}
+
+// إيقاف مراقبة النشاط
+function stopInactivityMonitor() {
+  if (inactivityTimer) clearInterval(inactivityTimer);
+  if (countdownTimer) clearInterval(countdownTimer);
+}
+
+// تسجيل الخروج
+async function logoutEmployee(reason = "تم تسجيل الخروج بنجاح.") {
+  if (isLoggingOut) return;
+
+  isLoggingOut = true;
+  stopInactivityMonitor();
+
+  const button = document.getElementById("logoutButton");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "جاري تسجيل الخروج...";
+  }
+
+  try {
+    await fetch("/api/employee", {
+      method: "DELETE",
+      credentials: "same-origin"
+    });
+  } catch (error) {
+    console.error("Logout request failed:", error);
+  }
+
+  alert(reason);
+  window.location.replace("/employee/");
+}
+
 async function checkEmployeeSession() {
   try {
     const response = await fetch("/api/employee", {
@@ -238,6 +358,8 @@ async function checkEmployeeSession() {
       currentEmployee.username;
 
     setStatus("حسابك نشط وجلسة الدخول صالحة.", "success");
+
+    startInactivityMonitor();
 
     await loadOrders();
 
@@ -378,6 +500,11 @@ async function loadFollowups(orderId) {
     );
 
     const data = await response.json();
+
+    if (response.status === 401 || response.status === 403) {
+      window.location.replace("/employee/");
+      return;
+    }
 
     if (!response.ok || !data.success) {
       throw new Error(data.error || "تعذر تحميل سجل المتابعة");
