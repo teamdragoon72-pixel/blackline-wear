@@ -13,7 +13,6 @@ function toBase64(bytes) {
   return btoa(binary);
 }
 
-
 async function hashPassword(password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
 
@@ -38,32 +37,7 @@ async function hashPassword(password) {
     )
   );
 
-  const toBase64 = (bytes) => {
-    let binary = "";
-    for (const byte of bytes) {
-      binary += String.fromCharCode(byte);
-    }
-    return btoa(binary);
-  };
-
   return `pbkdf2$100000$${toBase64(salt)}$${toBase64(hash)}`;
-}
-
-
-  const hash = new Uint8Array(
-    await crypto.subtle.deriveBits(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: 210000,
-        hash: "SHA-256"
-      },
-      key,
-      256
-    )
-  );
-
-  return `pbkdf2$210000$${toBase64(salt)}$${toBase64(hash)}`;
 }
 
 // عرض الموظفين
