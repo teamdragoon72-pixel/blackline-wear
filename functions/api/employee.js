@@ -147,14 +147,13 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-
 function getEmployeeCookie(request) {
   const cookies = request.headers.get("Cookie") || "";
   const entry = cookies.split(";")
     .map(x => x.trim())
-    .find(x => x.startsWith("blw_employee="));
+    .find(x => x.startsWith(`${COOKIE_NAME}=`));
 
-  return entry ? entry.slice("blw_employee=".length) : null;
+  return entry ? entry.slice(`${COOKIE_NAME}=`.length) : null;
 }
 
 async function verifyEmployeeSession(token, secret) {
@@ -240,4 +239,16 @@ export async function onRequestGet({ request, env }) {
   } catch {
     return json({ error: "حدث خطأ أثناء التحقق من الجلسة" }, 500);
   }
+}
+
+// تسجيل خروج الموظف وإلغاء الكوكي
+export async function onRequestDelete() {
+  return json(
+    { success: true, message: "تم تسجيل الخروج بنجاح" },
+    200,
+    {
+      "Set-Cookie":
+        `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Strict; Path=/api/employee; Max-Age=0`
+    }
+  );
 }
