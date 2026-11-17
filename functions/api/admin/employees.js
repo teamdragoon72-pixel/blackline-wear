@@ -61,6 +61,7 @@ export async function onRequestGet({ env }) {
     });
 
   } catch (error) {
+    console.error("Employees list error:", error);
     return json({ error: "تعذر تحميل الموظفين" }, 500);
   }
 }
@@ -115,11 +116,15 @@ export async function onRequestPost({ request, env }) {
     }, 201);
 
   } catch (error) {
-    if (String(error.message).toLowerCase().includes("unique")) {
+    console.error("Employee creation failed:", error);
+
+    if (String(error?.message || error).toLowerCase().includes("unique")) {
       return json({ error: "اسم المستخدم مستخدم بالفعل" }, 409);
     }
 
-    return json({ error: "حدث خطأ أثناء إنشاء الحساب" }, 500);
+    return json({
+      error: "فشل إنشاء الحساب: " + String(error?.message || error)
+    }, 500);
   }
 }
 
@@ -136,6 +141,7 @@ export async function onRequestPatch({ request, env }) {
     const id = Number(body.id);
 
     const activeValue = body.is_active;
+
     const isActive =
       activeValue === true || activeValue === 1 ? 1 :
       activeValue === false || activeValue === 0 ? 0 : null;
@@ -162,6 +168,9 @@ export async function onRequestPatch({ request, env }) {
     });
 
   } catch (error) {
-    return json({ error: "حدث خطأ أثناء تحديث حساب الموظف" }, 500);
+    console.error("Employee status update failed:", error);
+    return json({
+      error: "حدث خطأ أثناء تحديث حساب الموظف"
+    }, 500);
   }
 }
