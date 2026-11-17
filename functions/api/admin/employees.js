@@ -40,6 +40,32 @@ async function hashPassword(password) {
   return `pbkdf2$210000$${toBase64(salt)}$${toBase64(hash)}`;
 }
 
+// عرض الموظفين
+export async function onRequestGet({ env }) {
+  try {
+    const db = env[DB_BINDING];
+
+    if (!db) {
+      return json({ error: "قاعدة البيانات غير متصلة" }, 500);
+    }
+
+    const result = await db.prepare(
+      `SELECT id, full_name, username, is_active, created_at
+       FROM employees
+       ORDER BY id DESC`
+    ).all();
+
+    return json({
+      success: true,
+      employees: result.results || []
+    });
+
+  } catch (error) {
+    return json({ error: "تعذر تحميل الموظفين" }, 500);
+  }
+}
+
+// إنشاء حساب موظف
 export async function onRequestPost({ request, env }) {
   try {
     const db = env[DB_BINDING];
@@ -63,11 +89,15 @@ export async function onRequestPost({ request, env }) {
     }
 
     if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
-      return json({ error: "اسم المستخدم يجب أن يحتوي على حروف إنجليزية أو أرقام فقط" }, 400);
+      return json({
+        error: "اسم المستخدم يجب أن يحتوي على حروف إنجليزية أو أرقام فقط"
+      }, 400);
     }
 
     if (password.length < 8 || password.length > 200) {
-      return json({ error: "كلمة المرور يجب ألا تقل عن 8 أحرف" }, 400);
+      return json({
+        error: "كلمة المرور يجب ألا تقل عن 8 أحرف"
+      }, 400);
     }
 
     const passwordHash = await hashPassword(password);
@@ -93,3 +123,45 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
+// تفعيل أو إيقاف حساب موظف
+export async function onRequestPatch({ request, env }) {
+  try {
+    const db = env[DB_BINDING];
+
+    if (!db) {
+      return json({ error: "قاعدة البيانات غير متصلة" }, 500);
+    }
+
+    const body = await request.json();
+    const id = Number(body.id);
+
+    const activeValue = body.is_active;
+    const isActive =
+      activeValue === true || activeValue === 1 ? 1 :
+      activeValue === false || activeValue === 0 ? 0 : null;
+
+    if (!Number.isInteger(id) || id <= 0 || isActive === null) {
+      return json({ error: "بيانات الموظف غير صحيحة" }, 400);
+    }
+
+    const result = await db.prepare(
+      `UPDATE employees
+       SET is_active = ?
+       WHERE id = ?`
+    ).bind(isActive, id).run();
+
+    if (!result.meta.changes) {
+      return json({ error: "الموظف غير موجود" }, 404);
+    }
+
+    return json({
+      success: true,
+      message: isActive
+        ? "تم تفعيل حساب الموظف"
+        : "تم إيقاف حساب الموظف"
+    });
+
+  } catch (error) {
+    return json({ error: "حدث خطأ أثناء تحديث حساب الموظف" }, 500);
+  }
+}
