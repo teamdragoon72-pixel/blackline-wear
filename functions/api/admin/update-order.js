@@ -36,13 +36,27 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    const result = await db.prepare(`
-      UPDATE orders
-      SET status = ?
-      WHERE id = ?
-    `).bind(status, id).run();
+    // تحديث الطلب والعمولة في عملية واحدة
+    const results = await db.batch([
+      db.prepare(`
+        UPDATE orders
+        SET status = ?
+        WHERE id = ?
+      `).bind(status, id),
 
-    if (!result.meta.changes) {
+      db.prepare(`
+        UPDATE affiliate_orders
+        SET commission_status = CASE
+          WHEN commission_status = 'paid' THEN 'paid'
+          WHEN ? = 'delivered' THEN 'earned'
+          WHEN ? = 'cancelled' THEN 'cancelled'
+          ELSE 'pending'
+        END
+        WHERE order_id = ?
+      `).bind(status, status, id)
+    ]);
+
+    if (!results[0].meta.changes) {
       return Response.json(
         { error: "الطلب غير موجود" },
         { status: 404 }
@@ -51,12 +65,17 @@ export async function onRequestPost({ request, env }) {
 
     return Response.json({
       success: true,
-      message: "تم تحديث حالة الطلب"
+      message: "تم تحديث حالة الطلب والعمولة بنجاح"
     });
 
   } catch (error) {
+    console.error("Update order error:", error);
+
     return Response.json(
-      { error: "حدث خطأ أثناء تحديث الطلب" },
+      {
+        error: "حدث خطأ أثناء تحديث الطلب",
+        details: error?.message || String(error)
+      },
       { status: 500 }
     );
   }
