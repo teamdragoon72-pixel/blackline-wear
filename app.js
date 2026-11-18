@@ -18,6 +18,39 @@ const colors = [
   { value: "بيرجندي", label: "بيرجندي" }
 ];
 
+// =====================================
+// نظام تتبع المسوقين بالعمولة
+// =====================================
+
+const AFFILIATE_STORAGE_KEY = "blw_affiliate_code";
+
+function captureAffiliateCode() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const incomingCode = (params.get("ref") || "").trim().toUpperCase();
+
+    // كود المسوق يتكون من BL + 12 حرفًا/رقمًا سداسيًا
+    if (/^BL[A-F0-9]{12}$/.test(incomingCode)) {
+      localStorage.setItem(AFFILIATE_STORAGE_KEY, incomingCode);
+    }
+  } catch (error) {
+    console.error("Affiliate tracking error:", error);
+  }
+}
+
+function getAffiliateCode() {
+  try {
+    return localStorage.getItem(AFFILIATE_STORAGE_KEY) || "";
+  } catch (error) {
+    return "";
+  }
+}
+
+// تسجيل كود الإحالة فور فتح الموقع
+captureAffiliateCode();
+
+// =====================================
+
 let cart = [];
 
 const money = n => `${n.toLocaleString("en-US")} جنيه`;
@@ -168,6 +201,10 @@ document.getElementById("orderForm").addEventListener("submit", async e => {
       },
       body: JSON.stringify({
         ...data,
+
+        // إرسال كود المسوق تلقائيًا مع الطلب
+        affiliateCode: getAffiliateCode(),
+
         items: cart.map(x => ({
           id: x.id,
           qty: x.qty,
@@ -179,13 +216,13 @@ document.getElementById("orderForm").addEventListener("submit", async e => {
 
     const result = await response.json();
 
-   if (!response.ok) {
-  throw new Error(
-    result.details
-      ? result.error + " — " + result.details
-      : result.error || "تعذر إرسال الطلب"
-  );
-}
+    if (!response.ok) {
+      throw new Error(
+        result.details
+          ? result.error + " — " + result.details
+          : result.error || "تعذر إرسال الطلب"
+      );
+    }
 
     alert(
       "تم تسجيل طلبك بنجاح. رقم الطلب: " + result.orderId
