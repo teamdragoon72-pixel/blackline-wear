@@ -103,6 +103,24 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
+    // التحقق من كود المسوّق من قاعدة البيانات
+    // لا نعتمد على نسبة عمولة يرسلها المتصفح
+    const affiliateCode = String(
+      data.affiliateCode || data.affiliate_code || ""
+    ).trim().toUpperCase();
+
+    let affiliate = null;
+
+    if (affiliateCode) {
+      affiliate = await db.prepare(`
+        SELECT id, commission_rate
+        FROM affiliate_accounts
+        WHERE affiliate_code = ?
+          AND is_active = 1
+        LIMIT 1
+      `).bind(affiliateCode).first();
+    }
+
     // رقم مستقل لكل عملية شراء
     const purchaseId = crypto.randomUUID();
 
@@ -193,7 +211,38 @@ export async function onRequestPost({ request, env }) {
       `).bind(purchaseId)
     ];
 
-    // تنفيذ التسجيل والتوزيع في عملية واحدة
+    // تسجيل عمولات المسوّق لكل منتج في الطلب
+    // نسبة العمولة مأخوذة من حساب المسوّق في قاعدة البيانات
+    if (affiliate) {
+      statements.push(
+        db.prepare(`
+          INSERT INTO affiliate_orders (
+            order_id,
+            affiliate_id,
+            commission_rate,
+            order_total,
+            commission_amount,
+            commission_status
+          )
+          SELECT
+            id,
+            ?,
+            ?,
+            total,
+            ROUND(total * ? / 100, 2),
+            'pending'
+          FROM orders
+          WHERE purchase_id = ?
+        `).bind(
+          affiliate.id,
+          affiliate.commission_rate,
+          affiliate.commission_rate,
+          purchaseId
+        )
+      );
+    }
+
+    // تنفيذ التسجيل والتوزيع وربط المسوّق في عملية واحدة
     const results = await db.batch(statements);
 
     // معرفة الموظف الذي استلم العملية
@@ -215,6 +264,7 @@ export async function onRequestPost({ request, env }) {
       orderId: results[1].meta.last_row_id,
       purchaseId,
       assigned: Boolean(assignment),
+      affiliateAttributed: Boolean(affiliate),
       message: "تم تسجيل الطلب بنجاح"
     });
 
