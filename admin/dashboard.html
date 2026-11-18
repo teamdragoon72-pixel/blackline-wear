@@ -172,57 +172,6 @@
 
     #message { color: #bbb; margin: 20px 0; }
 
-      <!-- إدارة المسوقين بالعمولة -->
-  <section class="employees-section">
-    <h2>💰 إدارة المسوقين بالعمولة</h2>
-
-    <form id="affiliateForm" class="employee-form">
-      <input
-        type="text"
-        id="affiliateName"
-        placeholder="اسم المسوق بالكامل"
-        required
-        maxlength="100"
-      >
-
-      <input
-        type="text"
-        id="affiliateUsername"
-        placeholder="اسم المستخدم بالإنجليزية"
-        required
-        maxlength="40"
-        autocomplete="username"
-      >
-
-      <input
-        type="password"
-        id="affiliatePassword"
-        placeholder="كلمة المرور (8 أحرف على الأقل)"
-        required
-        minlength="8"
-        maxlength="200"
-        autocomplete="new-password"
-      >
-
-      <input
-        type="number"
-        id="affiliateRate"
-        placeholder="نسبة العمولة %"
-        value="10"
-        min="0.01"
-        max="100"
-        step="0.01"
-        required
-      >
-
-      <button type="submit" id="createAffiliateButton">
-        إنشاء حساب المسوق
-      </button>
-    </form>
-
-    <p id="affiliateMessage" aria-live="polite"></p>
-    <div id="affiliatesList">جاري تحميل المسوقين...</div>
-  </section>
 
     /* إدارة الموظفين */
     .employees-section,
