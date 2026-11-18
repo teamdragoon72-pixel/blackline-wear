@@ -344,6 +344,56 @@
       padding: 12px 0;
     }
 
+        /* إدارة المسوقين بالعمولة */
+    .affiliate-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px 0;
+      border-top: 1px solid #333;
+    }
+
+    .affiliate-item p {
+      margin: 6px 0;
+      color: #ccc;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .affiliate-item button {
+      background: #25D366;
+      color: #071b0e;
+    }
+
+    .affiliate-item button.inactive {
+      background: #ff7777;
+      color: #200;
+    }
+
+    .affiliate-link {
+      display: block;
+      color: #8bc5ff;
+      overflow-wrap: anywhere;
+      margin: 8px 0;
+    }
+
+    .affiliate-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .affiliate-actions button {
+      margin: 2px;
+    }
+
+    #affiliateMessage {
+      color: #bbb;
+      min-height: 24px;
+    }
+    
     @media(max-width:500px) {
       body { padding: 12px; }
       header { align-items: stretch; }
@@ -1058,11 +1108,246 @@ addText(
       }
     });
 
+    // =====================================
+    // إدارة المسوقين بالعمولة
+    // =====================================
+
+    const affiliateForm = document.getElementById("affiliateForm");
+    const affiliateMessage = document.getElementById("affiliateMessage");
+    const affiliatesList = document.getElementById("affiliatesList");
+    const createAffiliateButton =
+      document.getElementById("createAffiliateButton");
+
+    function showAffiliateMessage(text, isError = false) {
+      affiliateMessage.textContent = text;
+      affiliateMessage.style.color =
+        isError ? "#ff7777" : "#bbb";
+    }
+
+    function formatAffiliateMoney(value) {
+      return Number(value || 0).toLocaleString("en-US") + " جنيه";
+    }
+
+    async function loadAffiliates() {
+      affiliatesList.textContent = "جاري تحميل المسوقين...";
+
+      try {
+        const response = await fetch("/api/admin/affiliates", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store"
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/admin/";
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "تعذر تحميل المسوقين");
+        }
+
+        affiliatesList.replaceChildren();
+
+        const affiliates = data.affiliates || [];
+
+        if (!affiliates.length) {
+          affiliatesList.textContent = "لا يوجد مسوقون حتى الآن.";
+          return;
+        }
+
+        affiliates.forEach(affiliate => {
+          const item = document.createElement("div");
+          item.className = "affiliate-item";
+
+          const details = document.createElement("div");
+          const isActive = Number(affiliate.is_active) === 1;
+
+          addText(details, "strong", affiliate.full_name);
+          addText(details, "p", "اسم المستخدم: " + affiliate.username);
+          addText(details, "p", "الكود التسويقي: " + affiliate.affiliate_code);
+          addText(details, "p", "نسبة العمولة: " + affiliate.commission_rate + "%");
+          addText(details, "p", "الطلبات: " + Number(affiliate.total_orders || 0));
+          addText(details, "p", "المبيعات: " + formatAffiliateMoney(affiliate.total_sales));
+          addText(details, "p", "إجمالي العمولات: " + formatAffiliateMoney(affiliate.total_commissions));
+          addText(details, "p", "العمولات المدفوعة: " + formatAffiliateMoney(affiliate.paid_commissions));
+
+          addText(
+            details,
+            "p",
+            "حالة الحساب: " + (isActive ? "نشط" : "متوقف"),
+            isActive ? "active-label" : "inactive-label"
+          );
+
+          const link = document.createElement("a");
+          link.className = "affiliate-link";
+          link.href = "https://blackline-wear.pages.dev/?ref=" +
+            encodeURIComponent(affiliate.affiliate_code);
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "رابط المسوق: " + link.href;
+          details.appendChild(link);
+
+          const actions = document.createElement("div");
+          actions.className = "affiliate-actions";
+
+          const toggleButton = document.createElement("button");
+          toggleButton.className = isActive ? "inactive" : "";
+          toggleButton.textContent = isActive ? "إيقاف الحساب" : "تفعيل الحساب";
+
+          toggleButton.addEventListener("click", () => {
+            updateAffiliate(affiliate.id, {
+              is_active: !isActive
+            }, toggleButton);
+          });
+
+          const rateButton = document.createElement("button");
+          rateButton.textContent = "تعديل العمولة";
+          rateButton.style.background = "#ddd";
+          rateButton.style.color = "#111";
+
+          rateButton.addEventListener("click", () => {
+            const newRate = prompt(
+              "اكتب نسبة العمولة الجديدة من 0.01 إلى 100",
+              affiliate.commission_rate
+            );
+
+            if (newRate === null) return;
+
+            const rate = Number(newRate);
+
+            if (!Number.isFinite(rate) || rate <= 0 || rate > 100) {
+              showAffiliateMessage("نسبة العمولة غير صحيحة", true);
+              return;
+            }
+
+            updateAffiliate(affiliate.id, {
+              commission_rate: rate
+            }, rateButton);
+          });
+
+          const copyButton = document.createElement("button");
+          copyButton.textContent = "نسخ الرابط";
+          copyButton.style.background = "#ddd";
+          copyButton.style.color = "#111";
+
+          copyButton.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(link.href);
+              showAffiliateMessage("تم نسخ رابط المسوق");
+            } catch {
+              showAffiliateMessage("تعذر نسخ الرابط", true);
+            }
+          });
+
+          actions.appendChild(toggleButton);
+          actions.appendChild(rateButton);
+          actions.appendChild(copyButton);
+
+          item.appendChild(details);
+          item.appendChild(actions);
+          affiliatesList.appendChild(item);
+        });
+
+      } catch (error) {
+        affiliatesList.textContent = error.message;
+      }
+    }
+
+    async function updateAffiliate(id, changes, button) {
+      const oldText = button.textContent;
+      button.disabled = true;
+      button.textContent = "جاري التحديث...";
+
+      try {
+        const response = await fetch("/api/admin/affiliates", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            id,
+            ...changes
+          })
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/admin/";
+          return;
+        }
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "تعذر تحديث المسوق");
+        }
+
+        showAffiliateMessage(result.message || "تم تحديث المسوق بنجاح");
+        await loadAffiliates();
+
+      } catch (error) {
+        showAffiliateMessage(error.message, true);
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
+
+    affiliateForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      createAffiliateButton.disabled = true;
+      createAffiliateButton.textContent = "جاري إنشاء الحساب...";
+
+      showAffiliateMessage("جاري إنشاء حساب المسوق...");
+
+      const payload = {
+        full_name: document.getElementById("affiliateName").value.trim(),
+        username: document.getElementById("affiliateUsername").value.trim(),
+        password: document.getElementById("affiliatePassword").value,
+        commission_rate: Number(document.getElementById("affiliateRate").value)
+      };
+
+      try {
+        const response = await fetch("/api/admin/affiliates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(payload)
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/admin/";
+          return;
+        }
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "فشل إنشاء حساب المسوق");
+        }
+
+        affiliateForm.reset();
+        document.getElementById("affiliateRate").value = "10";
+
+        showAffiliateMessage(result.message || "تم إنشاء حساب المسوق بنجاح");
+        await loadAffiliates();
+
+      } catch (error) {
+        showAffiliateMessage(error.message, true);
+
+      } finally {
+        createAffiliateButton.disabled = false;
+        createAffiliateButton.textContent = "إنشاء حساب المسوق";
+      }
+    });
+    
     // أزرار لوحة الإدارة
-    document.getElementById("refresh").addEventListener("click", () => {
+       document.getElementById("refresh").addEventListener("click", () => {
       loadOrders();
       loadEmployees();
       loadEmployeeStats();
+      loadAffiliates();
     });
 
     document.getElementById("logout").addEventListener("click", () => {
@@ -1070,9 +1355,10 @@ addText(
     });
 
     // تحميل البيانات عند فتح اللوحة
-    loadOrders();
+       loadOrders();
     loadEmployees();
     loadEmployeeStats();
+    loadAffiliates();
   </script>
 
 </body>
