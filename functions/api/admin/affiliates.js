@@ -52,7 +52,7 @@ function generateAffiliateCode() {
     .toUpperCase();
 }
 
-// عرض المسوقين وإحصائياتهم
+// عرض المسوقين وسجل المدفوعات
 export async function onRequestGet({ env }) {
   try {
     const db = env[DB_BINDING];
@@ -70,8 +70,11 @@ export async function onRequestGet({ env }) {
         a.commission_rate,
         a.is_active,
         a.created_at,
+
         COUNT(o.id) AS total_orders,
+
         COALESCE(SUM(o.order_total), 0) AS total_sales,
+
         COALESCE(SUM(
           CASE
             WHEN o.commission_status != 'cancelled'
@@ -79,6 +82,23 @@ export async function onRequestGet({ env }) {
             ELSE 0
           END
         ), 0) AS total_commissions,
+
+        COALESCE(SUM(
+          CASE
+            WHEN o.commission_status = 'pending'
+            THEN o.commission_amount
+            ELSE 0
+          END
+        ), 0) AS pending_commissions,
+
+        COALESCE(SUM(
+          CASE
+            WHEN o.commission_status = 'earned'
+            THEN o.commission_amount
+            ELSE 0
+          END
+        ), 0) AS earned_commissions,
+
         COALESCE(SUM(
           CASE
             WHEN o.commission_status = 'paid'
@@ -86,22 +106,54 @@ export async function onRequestGet({ env }) {
             ELSE 0
           END
         ), 0) AS paid_commissions
+
       FROM affiliate_accounts a
+
       LEFT JOIN affiliate_orders o
         ON o.affiliate_id = a.id
+
       GROUP BY a.id
       ORDER BY a.id DESC
     `).all();
 
+    const paymentsResult = await db.prepare(`
+      SELECT
+        id,
+        affiliate_id,
+        amount,
+        notes,
+        paid_at
+      FROM affiliate_commission_payments
+      ORDER BY id DESC
+    `).all();
+
+    const paymentsByAffiliate = {};
+
+    for (const payment of paymentsResult.results || []) {
+      const affiliateId = payment.affiliate_id;
+
+      if (!paymentsByAffiliate[affiliateId]) {
+        paymentsByAffiliate[affiliateId] = [];
+      }
+
+      paymentsByAffiliate[affiliateId].push(payment);
+    }
+
+    const affiliates = (result.results || []).map(affiliate => ({
+      ...affiliate,
+      payment_history: paymentsByAffiliate[affiliate.id] || []
+    }));
+
     return json({
       success: true,
-      affiliates: result.results || []
+      affiliates
     });
 
   } catch (error) {
     console.error("Affiliate list error:", error);
+
     return json({
-      error: "تعذر تحميل المسوقين"
+      error: "تعذر تحميل المسوقين: " + String(error?.message || error)
     }, 500);
   }
 }
@@ -201,6 +253,7 @@ export async function onRequestPost({ request, env }) {
 
         created = true;
         break;
+
       } catch (error) {
         const message = String(error?.message || error).toLowerCase();
 
@@ -246,7 +299,7 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-// تفعيل أو إيقاف المسوق أو تعديل عمولته
+// تفعيل أو إيقاف المسوق أو تعديل عمولته أو صرف مستحقاته
 export async function onRequestPatch({ request, env }) {
   try {
     const db = env[DB_BINDING];
@@ -275,6 +328,57 @@ export async function onRequestPatch({ request, env }) {
       }, 404);
     }
 
+    // صرف جميع العمولات المستحقة
+    if (body.action === "pay_earned") {
+      const earned = await db.prepare(`
+        SELECT COALESCE(SUM(commission_amount), 0) AS amount
+        FROM affiliate_orders
+        WHERE affiliate_id = ?
+          AND commission_status = 'earned'
+      `).bind(id).first();
+
+      const amount = Number(earned?.amount || 0);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return json({
+          error: "لا توجد عمولات مستحقة للصرف"
+        }, 400);
+      }
+
+      const notes = String(body.notes || "").trim().slice(0, 500);
+
+      const results = await db.batch([
+        db.prepare(`
+          INSERT INTO affiliate_commission_payments (
+            affiliate_id,
+            amount,
+            notes
+          )
+          VALUES (?, ?, ?)
+        `).bind(id, amount, notes || null),
+
+        db.prepare(`
+          UPDATE affiliate_orders
+          SET commission_status = 'paid'
+          WHERE affiliate_id = ?
+            AND commission_status = 'earned'
+        `).bind(id)
+      ]);
+
+      if (!results[0]?.meta?.changes) {
+        return json({
+          error: "تعذر تسجيل عملية الصرف"
+        }, 500);
+      }
+
+      return json({
+        success: true,
+        message: "تم صرف العمولات المستحقة وتسجيل الدفعة",
+        paid_amount: amount
+      });
+    }
+
+    // تفعيل أو إيقاف الحساب
     if (body.is_active !== undefined) {
       const activeValue = body.is_active;
 
@@ -295,6 +399,7 @@ export async function onRequestPatch({ request, env }) {
       `).bind(isActive, id).run();
     }
 
+    // تعديل نسبة العمولة
     if (body.commission_rate !== undefined) {
       const rate = Number(body.commission_rate);
 
@@ -324,7 +429,7 @@ export async function onRequestPatch({ request, env }) {
     console.error("Affiliate update failed:", error);
 
     return json({
-      error: "حدث خطأ أثناء تحديث حساب المسوق"
+      error: "حدث خطأ أثناء تحديث حساب المسوق: " + String(error?.message || error)
     }, 500);
   }
 }
