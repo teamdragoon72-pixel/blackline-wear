@@ -1,0 +1,701 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <title>BLACK LINE | Affiliate Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #090909;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .topbar {
+      min-height: 75px;
+      padding: 16px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      background: #121212;
+      border-bottom: 1px solid #292929;
+    }
+
+    .brand {
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .brand span {
+      color: #999;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-actions button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: transparent;
+      color: white;
+    }
+
+    .top-actions button:hover {
+      background: #252525;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 1250px;
+      margin: 35px auto;
+    }
+
+    .welcome {
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      color: #999;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    .welcome h1 {
+      font-size: 28px;
+      margin: 10px 0;
+    }
+
+    .welcome p {
+      color: #999;
+      font-size: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+
+    .stat {
+      background: #151515;
+      border: 1px solid #292929;
+      border-radius: 13px;
+      padding: 23px;
+      min-height: 125px;
+    }
+
+    .stat-label {
+      color: #aaa;
+      font-size: 14px;
+      margin-bottom: 17px;
+    }
+
+    .stat-value {
+      font-size: 27px;
+      font-weight: 800;
+      direction: ltr;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .stat small {
+      display: block;
+      margin-top: 8px;
+      color: #777;
+      font-size: 12px;
+    }
+
+    .referral {
+      background: #151515;
+      border: 1px solid #333;
+      border-radius: 13px;
+      padding: 23px;
+      margin-bottom: 25px;
+    }
+
+    .referral h2,
+    .section h2 {
+      font-size: 19px;
+      margin: 0 0 18px;
+    }
+
+    .referral p {
+      color: #999;
+      font-size: 13px;
+    }
+
+    .referral-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .referral input {
+      flex: 1;
+      min-width: 0;
+      padding: 13px;
+      background: #090909;
+      border: 1px solid #383838;
+      color: #fff;
+      border-radius: 8px;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .primary-button {
+      padding: 12px 19px;
+      background: white;
+      color: #111;
+      border: 0;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .secondary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+
+    .section {
+      background: #151515;
+      border: 1px solid #292929;
+      border-radius: 13px;
+      padding: 23px;
+      margin-bottom: 25px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+    }
+
+    .refresh {
+      padding: 9px 13px;
+      background: #252525;
+      color: white;
+      border: 1px solid #444;
+      border-radius: 7px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      text-align: right;
+    }
+
+    th {
+      color: #999;
+      font-size: 12px;
+      font-weight: normal;
+      padding: 15px 10px;
+      border-bottom: 1px solid #333;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 16px 10px;
+      border-bottom: 1px solid #292929;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      background: #292929;
+      color: #ddd;
+    }
+
+    .status.delivered,
+    .status.earned,
+    .status.paid {
+      background: #183426;
+      color: #8be0ac;
+    }
+
+    .status.cancelled {
+      background: #421e1e;
+      color: #ff9999;
+    }
+
+    .empty,
+    .loading,
+    .error {
+      text-align: center;
+      color: #999;
+      padding: 30px 10px;
+    }
+
+    .error {
+      color: #ff8585;
+    }
+
+    .profile {
+      color: #aaa;
+      font-size: 13px;
+      margin-top: 15px;
+    }
+
+    .profile strong {
+      color: white;
+    }
+
+    .footer {
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      padding: 20px;
+    }
+
+    @media (max-width: 800px) {
+      .stats,
+      .secondary-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        margin-top: 24px;
+      }
+
+      .topbar {
+        padding: 14px 4%;
+      }
+
+      .brand {
+        font-size: 17px;
+      }
+
+      .top-actions button {
+        padding: 9px;
+        font-size: 12px;
+      }
+
+      .welcome h1 {
+        font-size: 23px;
+      }
+
+      .stats,
+      .secondary-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .stat {
+        padding: 16px;
+        min-height: 110px;
+      }
+
+      .stat-value {
+        font-size: 21px;
+      }
+
+      .referral-row {
+        flex-direction: column;
+      }
+
+      .referral input {
+        width: 100%;
+      }
+
+      .section,
+      .referral {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span>BLACK</span> LINE <b>WEAR</b>
+    </div>
+
+    <div class="top-actions">
+      <button id="refreshButton">تحديث البيانات</button>
+      <button id="logoutButton">خروج</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="welcome">
+      <p class="eyebrow">AFFILIATE PARTNER PORTAL</p>
+      <h1>أهلاً بيك، <span id="affiliateName">...</span> 👋</h1>
+      <p>تابع مبيعاتك وطلباتك وعمولاتك من مكان واحد.</p>
+
+      <div class="profile">
+        اسم المستخدم: <strong id="affiliateUsername">...</strong>
+        &nbsp; | &nbsp;
+        نسبة عمولتك: <strong id="affiliateRate">...</strong>
+      </div>
+    </section>
+
+    <section class="stats">
+
+      <div class="stat">
+        <div class="stat-label">إجمالي الطلبات</div>
+        <div class="stat-value" id="totalOrders">0</div>
+        <small>الطلبات المسجلة من رابطك</small>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">إجمالي المبيعات</div>
+        <div class="stat-value" id="totalSales">0 جنيه</div>
+        <small>قيمة الطلبات المنسوبة إليك</small>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">العمولات المعلقة</div>
+        <div class="stat-value" id="pendingCommissions">0 جنيه</div>
+        <small>في انتظار تسليم الطلبات</small>
+      </div>
+
+    </section>
+
+    <section class="secondary-stats">
+
+      <div class="stat">
+        <div class="stat-label">عمولات مستحقة</div>
+        <div class="stat-value" id="earnedCommissions">0 جنيه</div>
+        <small>طلبات تم تسليمها</small>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">عمولات مدفوعة</div>
+        <div class="stat-value" id="paidCommissions">0 جنيه</div>
+        <small>تم دفعها لك</small>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">عمولات ملغاة</div>
+        <div class="stat-value" id="cancelledCommissions">0 جنيه</div>
+        <small>طلبات تم إلغاؤها</small>
+      </div>
+
+    </section>
+
+    <section class="referral">
+
+      <h2>🔗 رابط التسويق الخاص بك</h2>
+
+      <p>
+        شارك الرابط مع عملائك، وأي طلب يتم من خلاله سيتم تسجيله ضمن حسابك.
+      </p>
+
+      <div class="referral-row">
+        <input id="referralUrl" readonly>
+        <button class="primary-button" id="copyLinkButton">
+          نسخ الرابط
+        </button>
+      </div>
+
+      <p id="copyMessage"></p>
+
+    </section>
+
+    <section class="section">
+
+      <div class="section-head">
+        <h2>📦 طلباتي من رابط التسويق</h2>
+        <button class="refresh" id="ordersRefreshButton">
+          تحديث الطلبات
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الطلب</th>
+              <th>المنتج</th>
+              <th>الكمية</th>
+              <th>قيمة الطلب</th>
+              <th>حالة الطلب</th>
+              <th>العمولة</th>
+              <th>حالة العمولة</th>
+              <th>التاريخ</th>
+            </tr>
+          </thead>
+
+          <tbody id="ordersTable">
+            <tr>
+              <td colspan="8" class="loading">جاري تحميل الطلبات...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    BLACK LINE WEAR — AFFILIATE PARTNER SYSTEM
+  </footer>
+
+  <script>
+    const money = value =>
+      Number(value || 0).toLocaleString("en-US", {
+        maximumFractionDigits: 2
+      }) + " جنيه";
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[char]);
+    }
+
+    const orderStatusLabels = {
+      pending: "طلب جديد",
+      processing: "قيد التجهيز",
+      shipped: "تم الشحن",
+      delivered: "تم التسليم",
+      cancelled: "ملغي"
+    };
+
+    const commissionStatusLabels = {
+      pending: "معلقة",
+      earned: "مستحقة",
+      paid: "مدفوعة",
+      cancelled: "ملغاة"
+    };
+
+    function formatDate(value) {
+      if (!value) return "-";
+
+      const date = new Date(
+        String(value).replace(" ", "T") + "Z"
+      );
+
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleDateString("ar-EG");
+    }
+
+    async function loadDashboard() {
+      const table = document.getElementById("ordersTable");
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="8" class="loading">جاري تحميل البيانات...</td>
+        </tr>
+      `;
+
+      try {
+        // التحقق من الجلسة أولاً
+        const sessionResponse = await fetch("/api/affiliate", {
+          credentials: "same-origin",
+          cache: "no-store"
+        });
+
+        if (sessionResponse.status === 401) {
+          window.location.replace("/affiliate/");
+          return;
+        }
+
+        const session = await sessionResponse.json();
+
+        if (!session.success) {
+          throw new Error(session.error || "تعذر التحقق من الحساب");
+        }
+
+        // تحميل بيانات الداشبورد من الجلسة نفسها
+        const response = await fetch("/api/affiliate/dashboard", {
+          credentials: "same-origin",
+          cache: "no-store"
+        });
+
+        if (response.status === 401) {
+          window.location.replace("/affiliate/");
+          return;
+        }
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "تعذر تحميل البيانات");
+        }
+
+        const affiliate = result.affiliate;
+        const stats = result.stats;
+
+        document.getElementById("affiliateName").textContent =
+          affiliate.name;
+
+        document.getElementById("affiliateUsername").textContent =
+          affiliate.username;
+
+        document.getElementById("affiliateRate").textContent =
+          Number(affiliate.commissionRate) + "%";
+
+        document.getElementById("totalOrders").textContent =
+          Number(stats.totalOrders).toLocaleString("en-US");
+
+        document.getElementById("totalSales").textContent =
+          money(stats.totalSales);
+
+        document.getElementById("pendingCommissions").textContent =
+          money(stats.pendingCommissions);
+
+        document.getElementById("earnedCommissions").textContent =
+          money(stats.earnedCommissions);
+
+        document.getElementById("paidCommissions").textContent =
+          money(stats.paidCommissions);
+
+        document.getElementById("cancelledCommissions").textContent =
+          money(stats.cancelledCommissions);
+
+        document.getElementById("referralUrl").value =
+          affiliate.referralUrl;
+
+        renderOrders(result.orders || []);
+
+      } catch (error) {
+        console.error("Dashboard loading error:", error);
+
+        table.innerHTML = `
+          <tr>
+            <td colspan="8" class="error">
+              ${escapeHTML(error.message || "حدث خطأ أثناء تحميل البيانات")}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function renderOrders(orders) {
+      const table = document.getElementById("ordersTable");
+
+      if (!orders.length) {
+        table.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty">
+              لسه مفيش طلبات مسجلة من رابطك.
+              شارك رابطك وابدأ أول مبيعاتك!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      table.innerHTML = orders.map(order => {
+        const orderStatus =
+          orderStatusLabels[order.orderStatus] ||
+          order.orderStatus;
+
+        const commissionStatus =
+          commissionStatusLabels[order.commissionStatus] ||
+          order.commissionStatus;
+
+        return `
+          <tr>
+            <td>#${escapeHTML(order.orderId)}</td>
+            <td>${escapeHTML(order.productName)}</td>
+            <td>${Number(order.quantity || 0)}</td>
+            <td>${money(order.total)}</td>
+            <td>
+              <span class="status ${escapeHTML(order.orderStatus)}">
+                ${escapeHTML(orderStatus)}
+              </span>
+            </td>
+            <td>${money(order.commissionAmount)}</td>
+            <td>
+              <span class="status ${escapeHTML(order.commissionStatus)}">
+                ${escapeHTML(commissionStatus)}
+              </span>
+            </td>
+            <td>${escapeHTML(formatDate(order.createdAt))}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    document.getElementById("copyLinkButton").onclick = async () => {
+      const input = document.getElementById("referralUrl");
+      const message = document.getElementById("copyMessage");
+
+      try {
+        await navigator.clipboard.writeText(input.value);
+        message.textContent = "تم نسخ رابط التسويق بنجاح ✓";
+      } catch {
+        input.select();
+        const copied = document.execCommand("copy");
+        message.textContent = copied
+          ? "تم نسخ الرابط ✓"
+          : "تعذر النسخ، انسخ الرابط يدويًا";
+      }
+    };
+
+    document.getElementById("refreshButton").onclick =
+      loadDashboard;
+
+    document.getElementById("ordersRefreshButton").onclick =
+      loadDashboard;
+
+    document.getElementById("logoutButton").onclick = async () => {
+      const button = document.getElementById("logoutButton");
+
+      button.disabled = true;
+      button.textContent = "جارٍ الخروج...";
+
+      try {
+        await fetch("/api/affiliate", {
+          method: "DELETE",
+          credentials: "same-origin"
+        });
+      } finally {
+        window.location.replace("/affiliate/");
+      }
+    };
+
+    loadDashboard();
+  </script>
+
+</body>
+</html>
