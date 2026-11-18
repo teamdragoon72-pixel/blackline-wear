@@ -172,7 +172,6 @@
 
     #message { color: #bbb; margin: 20px 0; }
 
-    /* إدارة الموظفين والمسوقين */
     .employees-section,
     .employee-performance-section {
       background: #1c1c1c;
@@ -240,7 +239,6 @@
       min-height: 24px;
     }
 
-    /* إحصائيات أداء الموظفين */
     .performance-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -293,10 +291,11 @@
     }
 
     /* إدارة المسوقين بالعمولة */
+
     .affiliate-item {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       flex-wrap: wrap;
       gap: 12px;
       padding: 16px 0;
@@ -335,6 +334,63 @@
 
     .affiliate-actions button {
       margin: 2px;
+    }
+
+    .affiliate-payment-box {
+      width: 100%;
+      background: #242424;
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .affiliate-payment-box h4 {
+      margin: 0 0 12px;
+      color: white;
+    }
+
+    .affiliate-payment-box p {
+      margin: 7px 0;
+      color: #ccc;
+    }
+
+    .earned-commission {
+      color: #25D366 !important;
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .pay-commission-button {
+      background: #25D366 !important;
+      color: #071b0e !important;
+      padding: 12px 18px;
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    .pay-commission-button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .payment-history {
+      border-top: 1px solid #444;
+      margin-top: 12px;
+      padding-top: 12px;
+    }
+
+    .payment-record {
+      background: #1b1b1b;
+      border: 1px solid #383838;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .payment-record p {
+      font-size: 14px;
     }
 
     #affiliateMessage {
@@ -395,7 +451,6 @@
     <div id="topProducts">جاري تحميل المنتجات...</div>
   </section>
 
-  <!-- أداء الموظفين -->
   <section class="employee-performance-section">
     <h2>📊 أداء الموظفين</h2>
     <div id="employeeStatsMessage" class="performance-empty">
@@ -405,6 +460,7 @@
   </section>
 
   <!-- إدارة المسوقين بالعمولة -->
+
   <section class="employees-section">
     <h2>💰 إدارة المسوقين بالعمولة</h2>
 
@@ -457,6 +513,7 @@
   </section>
 
   <!-- إدارة الموظفين -->
+
   <section class="employees-section">
     <h2>👥 إدارة الموظفين</h2>
 
@@ -571,7 +628,6 @@
       return element;
     }
 
-    // تحويل رقم الهاتف إلى الصيغة الدولية المصرية
     function normalizePhone(phone) {
       let number = String(phone || "").replace(/\D/g, "");
 
@@ -588,7 +644,6 @@
       return number;
     }
 
-    // تجهيز رسالة واتساب للعميل
     function createWhatsAppLink(order) {
       const phone = normalizePhone(order.phone);
 
@@ -643,6 +698,7 @@
 
         message.textContent = "تم تحديث الطلب #" + id + " بنجاح";
         await loadOrders();
+        await loadAffiliates();
 
       } catch (error) {
         message.textContent = error.message;
@@ -697,12 +753,14 @@
           addText(card, "p", "اللون: " + (order.color || "غير محدد"));
           addText(card, "p", "الكمية: " + order.quantity);
           addText(card, "p", "سعر القطعة: " + order.price + " جنيه");
+
           addText(
             card,
             "p",
             "الحالة الحالية: " + (statusNames[order.status] || order.status),
             "status"
           );
+
           addText(card, "p", "التاريخ: " + order.created_at);
           addText(card, "p", "الإجمالي: " + order.total + " جنيه", "total");
 
@@ -750,7 +808,8 @@
       }
     }
 
-    // عرض إحصائيات أداء الموظفين
+    // إحصائيات أداء الموظفين
+
     const employeeStatsList = document.getElementById("employeeStatsList");
     const employeeStatsMessage =
       document.getElementById("employeeStatsMessage");
@@ -849,7 +908,6 @@
 
           card.appendChild(followupsCount);
 
-          // عدد الطلبات المؤكدة
           const confirmedCount = document.createElement("p");
           confirmedCount.appendChild(
             document.createTextNode("الطلبات المؤكدة: ")
@@ -864,7 +922,6 @@
 
           card.appendChild(confirmedCount);
 
-          // عدد المتابعات المتأخرة
           const overdueCount = document.createElement("p");
           overdueCount.appendChild(
             document.createTextNode("المتابعات المتأخرة: ")
@@ -918,6 +975,7 @@
     }
 
     // إدارة الموظفين
+
     const employeeForm = document.getElementById("employeeForm");
     const employeeMessage = document.getElementById("employeeMessage");
     const employeesList = document.getElementById("employeesList");
@@ -970,11 +1028,7 @@
           const details = document.createElement("div");
 
           addText(details, "strong", employee.full_name);
-          addText(
-            details,
-            "p",
-            "اسم المستخدم: " + employee.username
-          );
+          addText(details, "p", "اسم المستخدم: " + employee.username);
 
           addText(
             details,
@@ -1108,9 +1162,7 @@
       }
     });
 
-    // =====================================
     // إدارة المسوقين بالعمولة
-    // =====================================
 
     const affiliateForm = document.getElementById("affiliateForm");
     const affiliateMessage = document.getElementById("affiliateMessage");
@@ -1126,6 +1178,21 @@
 
     function formatAffiliateMoney(value) {
       return Number(value || 0).toLocaleString("en-US") + " جنيه";
+    }
+
+    function formatPaymentDate(value) {
+      if (!value) return "غير محدد";
+
+      const date = new Date(String(value).replace(" ", "T") + "Z");
+
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleString("ar-EG", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      });
     }
 
     async function loadAffiliates() {
@@ -1163,15 +1230,18 @@
           item.className = "affiliate-item";
 
           const details = document.createElement("div");
+          details.style.width = "100%";
+
           const isActive = Number(affiliate.is_active) === 1;
 
-          addText(details, "strong", affiliate.full_name);
+          addText(details, "h3", affiliate.full_name);
           addText(details, "p", "اسم المستخدم: " + affiliate.username);
           addText(details, "p", "الكود التسويقي: " + affiliate.affiliate_code);
           addText(details, "p", "نسبة العمولة: " + affiliate.commission_rate + "%");
           addText(details, "p", "الطلبات: " + Number(affiliate.total_orders || 0));
           addText(details, "p", "المبيعات: " + formatAffiliateMoney(affiliate.total_sales));
           addText(details, "p", "إجمالي العمولات: " + formatAffiliateMoney(affiliate.total_commissions));
+          addText(details, "p", "العمولات المعلقة: " + formatAffiliateMoney(affiliate.pending_commissions));
           addText(details, "p", "العمولات المدفوعة: " + formatAffiliateMoney(affiliate.paid_commissions));
 
           addText(
@@ -1190,12 +1260,175 @@
           link.textContent = "رابط المسوق: " + link.href;
           details.appendChild(link);
 
+          // صندوق صرف العمولات
+
+          const paymentBox = document.createElement("div");
+          paymentBox.className = "affiliate-payment-box";
+
+          addText(paymentBox, "h4", "💰 حساب العمولات");
+
+          const earnedAmount = Number(
+            affiliate.earned_commissions || 0
+          );
+
+          addText(
+            paymentBox,
+            "p",
+            "المبلغ المستحق للصرف: " +
+              formatAffiliateMoney(earnedAmount),
+            "earned-commission"
+          );
+
+          const payButton = document.createElement("button");
+          payButton.className = "pay-commission-button";
+          payButton.textContent = "صرف العمولات المستحقة";
+          payButton.disabled = earnedAmount <= 0;
+
+          if (earnedAmount <= 0) {
+            payButton.textContent = "لا توجد عمولات مستحقة حالياً";
+          }
+
+          payButton.addEventListener("click", async () => {
+            if (earnedAmount <= 0) {
+              showAffiliateMessage(
+                "لا توجد عمولات مستحقة للصرف",
+                true
+              );
+              return;
+            }
+
+            const confirmed = confirm(
+              "هل تريد صرف مبلغ " +
+              formatAffiliateMoney(earnedAmount) +
+              " للمسوق " +
+              affiliate.full_name +
+              "؟"
+            );
+
+            if (!confirmed) return;
+
+            const notes = prompt(
+              "اكتب ملاحظات عملية الصرف (اختياري):",
+              ""
+            );
+
+            if (notes === null) return;
+
+            payButton.disabled = true;
+            payButton.textContent = "جاري تسجيل الصرف...";
+
+            try {
+              const payResponse = await fetch(
+                "/api/admin/affiliates",
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  credentials: "same-origin",
+                  body: JSON.stringify({
+                    id: affiliate.id,
+                    action: "pay_earned",
+                    notes
+                  })
+                }
+              );
+
+              if (payResponse.status === 401) {
+                window.location.href = "/admin/";
+                return;
+              }
+
+              const result = await payResponse.json();
+
+              if (!payResponse.ok) {
+                throw new Error(
+                  result.error || "فشل صرف العمولات"
+                );
+              }
+
+              showAffiliateMessage(
+                "تم تسجيل صرف " +
+                formatAffiliateMoney(result.paid_amount) +
+                " للمسوق " +
+                affiliate.full_name
+              );
+
+              await loadAffiliates();
+
+            } catch (error) {
+              showAffiliateMessage(error.message, true);
+              payButton.disabled = false;
+              payButton.textContent = "صرف العمولات المستحقة";
+            }
+          });
+
+          paymentBox.appendChild(payButton);
+
+          // سجل المدفوعات السابقة
+
+          const historyBox = document.createElement("div");
+          historyBox.className = "payment-history";
+
+          addText(historyBox, "h4", "📋 سجل عمليات الصرف");
+
+          const payments = affiliate.payment_history || [];
+
+          if (!payments.length) {
+            addText(
+              historyBox,
+              "p",
+              "لا توجد عمليات صرف سابقة لهذا المسوق."
+            );
+          } else {
+            payments.forEach((payment, index) => {
+              const record = document.createElement("div");
+              record.className = "payment-record";
+
+              addText(
+                record,
+                "strong",
+                "عملية صرف رقم #" + payment.id
+              );
+
+              addText(
+                record,
+                "p",
+                "المبلغ المصروف: " +
+                  formatAffiliateMoney(payment.amount)
+              );
+
+              addText(
+                record,
+                "p",
+                "تاريخ الصرف: " +
+                  formatPaymentDate(payment.paid_at)
+              );
+
+              if (payment.notes) {
+                addText(
+                  record,
+                  "p",
+                  "ملاحظات: " + payment.notes
+                );
+              }
+
+              historyBox.appendChild(record);
+            });
+          }
+
+          paymentBox.appendChild(historyBox);
+          details.appendChild(paymentBox);
+
+          // أزرار إدارة الحساب
+
           const actions = document.createElement("div");
           actions.className = "affiliate-actions";
 
           const toggleButton = document.createElement("button");
           toggleButton.className = isActive ? "inactive" : "";
-          toggleButton.textContent = isActive ? "إيقاف الحساب" : "تفعيل الحساب";
+          toggleButton.textContent =
+            isActive ? "إيقاف الحساب" : "تفعيل الحساب";
 
           toggleButton.addEventListener("click", () => {
             updateAffiliate(affiliate.id, {
@@ -1219,7 +1452,10 @@
             const rate = Number(newRate);
 
             if (!Number.isFinite(rate) || rate <= 0 || rate > 100) {
-              showAffiliateMessage("نسبة العمولة غير صحيحة", true);
+              showAffiliateMessage(
+                "نسبة العمولة غير صحيحة",
+                true
+              );
               return;
             }
 
@@ -1248,6 +1484,7 @@
 
           item.appendChild(details);
           item.appendChild(actions);
+
           affiliatesList.appendChild(item);
         });
 
@@ -1280,10 +1517,15 @@
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || "تعذر تحديث المسوق");
+          throw new Error(
+            result.error || "تعذر تحديث المسوق"
+          );
         }
 
-        showAffiliateMessage(result.message || "تم تحديث المسوق بنجاح");
+        showAffiliateMessage(
+          result.message || "تم تحديث المسوق بنجاح"
+        );
+
         await loadAffiliates();
 
       } catch (error) {
@@ -1305,7 +1547,9 @@
         full_name: document.getElementById("affiliateName").value.trim(),
         username: document.getElementById("affiliateUsername").value.trim(),
         password: document.getElementById("affiliatePassword").value,
-        commission_rate: Number(document.getElementById("affiliateRate").value)
+        commission_rate: Number(
+          document.getElementById("affiliateRate").value
+        )
       };
 
       try {
@@ -1324,13 +1568,18 @@
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || "فشل إنشاء حساب المسوق");
+          throw new Error(
+            result.error || "فشل إنشاء حساب المسوق"
+          );
         }
 
         affiliateForm.reset();
         document.getElementById("affiliateRate").value = "10";
 
-        showAffiliateMessage(result.message || "تم إنشاء حساب المسوق بنجاح");
+        showAffiliateMessage(
+          result.message || "تم إنشاء حساب المسوق بنجاح"
+        );
+
         await loadAffiliates();
 
       } catch (error) {
@@ -1343,6 +1592,7 @@
     });
 
     // أزرار لوحة الإدارة
+
     document.getElementById("refresh").addEventListener("click", () => {
       loadOrders();
       loadEmployees();
@@ -1355,6 +1605,7 @@
     });
 
     // تحميل البيانات عند فتح اللوحة
+
     loadOrders();
     loadEmployees();
     loadEmployeeStats();
