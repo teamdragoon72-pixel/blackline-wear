@@ -1,4 +1,4 @@
-``
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -172,8 +172,7 @@
 
     #message { color: #bbb; margin: 20px 0; }
 
-
-    /* إدارة الموظفين */
+    /* إدارة الموظفين والمسوقين */
     .employees-section,
     .employee-performance-section {
       background: #1c1c1c;
@@ -269,14 +268,14 @@
     }
 
     .performance-number {
-  color: #25D366;
-  font-weight: bold;
-}
+      color: #25D366;
+      font-weight: bold;
+    }
 
-.overdue-number {
-  color: #ff7777;
-  font-weight: bold;
-}
+    .overdue-number {
+      color: #ff7777;
+      font-weight: bold;
+    }
 
     .active-label {
       color: #25D366;
@@ -293,7 +292,7 @@
       padding: 12px 0;
     }
 
-        /* إدارة المسوقين بالعمولة */
+    /* إدارة المسوقين بالعمولة */
     .affiliate-item {
       display: flex;
       justify-content: space-between;
@@ -342,7 +341,7 @@
       color: #bbb;
       min-height: 24px;
     }
-    
+
     @media(max-width:500px) {
       body { padding: 12px; }
       header { align-items: stretch; }
@@ -403,6 +402,58 @@
       جاري تحميل إحصائيات الموظفين...
     </div>
     <div id="employeeStatsList" class="performance-grid"></div>
+  </section>
+
+  <!-- إدارة المسوقين بالعمولة -->
+  <section class="employees-section">
+    <h2>💰 إدارة المسوقين بالعمولة</h2>
+
+    <form id="affiliateForm" class="employee-form">
+      <input
+        type="text"
+        id="affiliateName"
+        placeholder="اسم المسوق بالكامل"
+        required
+        maxlength="100"
+      >
+
+      <input
+        type="text"
+        id="affiliateUsername"
+        placeholder="اسم المستخدم بالإنجليزية"
+        required
+        maxlength="40"
+        autocomplete="username"
+      >
+
+      <input
+        type="password"
+        id="affiliatePassword"
+        placeholder="كلمة المرور (8 أحرف على الأقل)"
+        required
+        minlength="8"
+        maxlength="200"
+        autocomplete="new-password"
+      >
+
+      <input
+        type="number"
+        id="affiliateRate"
+        placeholder="نسبة العمولة %"
+        value="10"
+        min="0.01"
+        max="100"
+        step="0.01"
+        required
+      >
+
+      <button type="submit" id="createAffiliateButton">
+        إنشاء حساب المسوق
+      </button>
+    </form>
+
+    <p id="affiliateMessage" aria-live="polite"></p>
+    <div id="affiliatesList">جاري تحميل المسوقين...</div>
   </section>
 
   <!-- إدارة الموظفين -->
@@ -796,42 +847,42 @@
             "performance-number"
           );
 
-         card.appendChild(followupsCount);
+          card.appendChild(followupsCount);
 
-// عدد الطلبات المؤكدة
-const confirmedCount = document.createElement("p");
-confirmedCount.appendChild(
-  document.createTextNode("الطلبات المؤكدة: ")
-);
+          // عدد الطلبات المؤكدة
+          const confirmedCount = document.createElement("p");
+          confirmedCount.appendChild(
+            document.createTextNode("الطلبات المؤكدة: ")
+          );
 
-addText(
-  confirmedCount,
-  "span",
-  Number(employee.confirmed_orders || 0),
-  "performance-number"
-);
+          addText(
+            confirmedCount,
+            "span",
+            Number(employee.confirmed_orders || 0),
+            "performance-number"
+          );
 
-card.appendChild(confirmedCount);
+          card.appendChild(confirmedCount);
 
-// عدد المتابعات المتأخرة
-const overdueCount = document.createElement("p");
-overdueCount.appendChild(
-  document.createTextNode("المتابعات المتأخرة: ")
-);
+          // عدد المتابعات المتأخرة
+          const overdueCount = document.createElement("p");
+          overdueCount.appendChild(
+            document.createTextNode("المتابعات المتأخرة: ")
+          );
 
-addText(
-  overdueCount,
-  "span",
-  Number(employee.overdue_followups || 0),
-  "overdue-number"
-);
+          addText(
+            overdueCount,
+            "span",
+            Number(employee.overdue_followups || 0),
+            "overdue-number"
+          );
 
-card.appendChild(overdueCount);
+          card.appendChild(overdueCount);
 
-addText(
-  card,
-  "p",
-  "آخر نتيجة: " +
+          addText(
+            card,
+            "p",
+            "آخر نتيجة: " +
             (
               employee.latest_outcome
                 ? outcomeNames[employee.latest_outcome] ||
@@ -1290,9 +1341,9 @@ addText(
         createAffiliateButton.textContent = "إنشاء حساب المسوق";
       }
     });
-    
+
     // أزرار لوحة الإدارة
-       document.getElementById("refresh").addEventListener("click", () => {
+    document.getElementById("refresh").addEventListener("click", () => {
       loadOrders();
       loadEmployees();
       loadEmployeeStats();
@@ -1304,7 +1355,7 @@ addText(
     });
 
     // تحميل البيانات عند فتح اللوحة
-       loadOrders();
+    loadOrders();
     loadEmployees();
     loadEmployeeStats();
     loadAffiliates();
