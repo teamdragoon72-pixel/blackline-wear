@@ -1,246 +1,154 @@
-
-const products = [
-  { id: 1, name: "تيشيرت رياضي أسود", category: "men", price: 450, mark: "BLW" },
-  { id: 2, name: "هودي كاجوال", category: "men", price: 850, mark: "HOOD" },
-  { id: 3, name: "بنطلون رياضي", category: "men", price: 620, mark: "MOVE" },
-  { id: 4, name: "طقم رياضي حريمي", category: "women", price: 790, mark: "BLW" },
-  { id: 5, name: "تيشيرت أوفر سايز", category: "women", price: 420, mark: "LINE" },
-  { id: 6, name: "ليجن رياضي", category: "women", price: 550, mark: "FIT" }
-];
-
-const sizes = ["S", "M", "L", "XL", "XXL"];
-
-const colors = [
-  { value: "أسود", label: "أسود" },
-  { value: "أبيض", label: "أبيض" },
-  { value: "رمادي", label: "رمادي" },
-  { value: "زيتي", label: "زيتي" },
-  { value: "بيرجندي", label: "بيرجندي" }
-];
-
-// =====================================
-// نظام تتبع المسوقين بالعمولة
-// =====================================
-
+// BLACK LINE storefront - catalog is fetched from D1 through /api/products.
 const AFFILIATE_STORAGE_KEY = "blw_affiliate_code";
-
-function captureAffiliateCode() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const incomingCode = (params.get("ref") || "").trim().toUpperCase();
-
-    // كود المسوق يتكون من BL + 12 حرفًا/رقمًا سداسيًا
-    if (/^BL[A-F0-9]{12}$/.test(incomingCode)) {
-      localStorage.setItem(AFFILIATE_STORAGE_KEY, incomingCode);
-    }
-  } catch (error) {
-    console.error("Affiliate tracking error:", error);
-  }
-}
-
-function getAffiliateCode() {
-  try {
-    return localStorage.getItem(AFFILIATE_STORAGE_KEY) || "";
-  } catch (error) {
-    return "";
-  }
-}
-
-// تسجيل كود الإحالة فور فتح الموقع
-captureAffiliateCode();
-
-// =====================================
-
+let products = [];
 let cart = [];
 
-const money = n => `${n.toLocaleString("en-US")} جنيه`;
+const money = n => `${Number(n || 0).toLocaleString("en-US")} جنيه`;
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[ch]));
+function parseArray(value) {
+  if (Array.isArray(value)) return value;
+  try { const parsed = JSON.parse(value || "[]"); return Array.isArray(parsed) ? parsed : []; }
+  catch { return []; }
+}
+function captureAffiliateCode() {
+  try {
+    const code = (new URLSearchParams(window.location.search).get("ref") || "").trim().toUpperCase();
+    if (/^BL[A-F0-9]{12}$/.test(code)) localStorage.setItem(AFFILIATE_STORAGE_KEY, code);
+  } catch (error) { console.error("Affiliate tracking error", error); }
+}
+function getAffiliateCode() {
+  try { return localStorage.getItem(AFFILIATE_STORAGE_KEY) || ""; }
+  catch { return ""; }
+}
+captureAffiliateCode();
 
+function getProduct(id) { return products.find(p => Number(p.id) === Number(id)); }
 function renderProducts() {
   for (const category of ["men", "women"]) {
-    document.getElementById(category + "Products").innerHTML =
-      products
-        .filter(p => p.category === category)
-        .map(p => `
-          <article class="product">
-            <div class="product-art">${p.mark}</div>
-            <h3>${p.name}</h3>
-            <p>قطعة تجريبية — استبدلها بمنتجك الحقيقي</p>
-
-            <label for="size-${p.id}">المقاس</label>
-            <select id="size-${p.id}">
-              <option value="">اختر المقاس</option>
-              ${sizes.map(s => `<option value="${s}">${s}</option>`).join("")}
-            </select>
-
-            <label for="color-${p.id}">اللون</label>
-            <select id="color-${p.id}">
-              <option value="">اختر اللون</option>
-              ${colors.map(c => `<option value="${c.value}">${c.label}</option>`).join("")}
-            </select>
-
-            <div class="product-foot">
-              <strong>${money(p.price)}</strong>
-              <button onclick="addToCart(${p.id})">أضف للسلة +</button>
-            </div>
-          </article>
-        `).join("");
+    const box = document.getElementById(category + "Products");
+    if (!box) continue;
+    const group = products.filter(p => String(p.category || "").toLowerCase() === category);
+    if (!group.length) {
+      box.innerHTML = '<p class="empty">لا توجد منتجات متاحة في هذا القسم حاليًا.</p>';
+      continue;
+    }
+    box.innerHTML = group.map(p => {
+      const sizes = parseArray(p.sizes);
+      const colors = parseArray(p.colors);
+      const images = parseArray(p.images);
+      const image = p.main_image || images[0] || "";
+      const sizeOptions = sizes.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+      const colorOptions = colors.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+      const art = image
+        ? `<img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(p.name)}" loading="lazy">`
+        : `<div class="product-art">${escapeHtml(p.name)}</div>`;
+      return `<article class="product">
+        ${art}
+        <h3>${escapeHtml(p.name)}</h3>
+        ${p.description ? `<p>${escapeHtml(p.description)}</p>` : ""}
+        <label for="size-${p.id}">المقاس</label>
+        <select id="size-${p.id}" ${sizes.length ? "" : "disabled"}>
+          <option value="">${sizes.length ? "اختر المقاس" : "لا توجد مقاسات"}</option>${sizeOptions}
+        </select>
+        <label for="color-${p.id}">اللون</label>
+        <select id="color-${p.id}" ${colors.length ? "" : "disabled"}>
+          <option value="">${colors.length ? "اختر اللون" : "لا توجد ألوان"}</option>${colorOptions}
+        </select>
+        <div class="product-foot"><strong>${money(p.price)}</strong>
+          <button onclick="addToCart(${Number(p.id)})" ${(!sizes.length || !colors.length) ? "disabled" : ""}>أضف للسلة +</button>
+        </div>
+      </article>`;
+    }).join("");
   }
 }
-
+async function loadProducts() {
+  for (const category of ["men", "women"]) {
+    const box = document.getElementById(category + "Products");
+    if (box) box.innerHTML = '<p class="empty">جاري تحميل المنتجات...</p>';
+  }
+  try {
+    const response = await fetch("/api/products", { cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "تعذر تحميل المنتجات");
+    products = (result.products || []).map(p => ({
+      ...p,
+      id: Number(p.id),
+      price: Number(p.price),
+      sizes: parseArray(p.sizes),
+      colors: parseArray(p.colors),
+      images: parseArray(p.images)
+    })).filter(p => Number.isFinite(p.id) && p.price > 0);
+    renderProducts();
+    renderCart();
+  } catch (error) {
+    for (const category of ["men", "women"]) {
+      const box = document.getElementById(category + "Products");
+      if (box) box.innerHTML = `<p class="empty">${escapeHtml(error.message)}. حاول تحديث الصفحة.</p>`;
+    }
+  }
+}
 function addToCart(id) {
-  const size = document.getElementById(`size-${id}`).value;
-  const color = document.getElementById(`color-${id}`).value;
-
-  if (!size || !color) {
-    alert("من فضلك اختر المقاس واللون أولاً");
-    return;
+  const product = getProduct(id);
+  if (!product) { alert("المنتج غير متاح"); return; }
+  const size = document.getElementById(`size-${id}`)?.value || "";
+  const color = document.getElementById(`color-${id}`)?.value || "";
+  if (!product.sizes.includes(size) || !product.colors.includes(color)) {
+    alert("من فضلك اختر مقاس ولون متاحين أولًا"); return;
   }
-
-  const item = cart.find(x =>
-    x.id === id && x.size === size && x.color === color
-  );
-
-  if (item) {
-    item.qty++;
-  } else {
-    cart.push({ id, qty: 1, size, color });
-  }
-
+  const existing = cart.find(x => x.id === id && x.size === size && x.color === color);
+  if (existing) existing.qty++;
+  else cart.push({ id, qty: 1, size, color });
   renderCart();
 }
-
-function removeFromCart(index) {
-  cart.splice(index, 1);
-  renderCart();
+function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
+function cartSubtotal() {
+  return cart.reduce((sum, item) => sum + (getProduct(item.id)?.price || 0) * item.qty, 0);
 }
-
 function renderCart() {
-  document.getElementById("cartCount").textContent =
-    cart.reduce((s, x) => s + x.qty, 0);
-
-  document.getElementById("cartTotal").textContent =
-    money(cart.reduce((s, x) =>
-      s + products.find(p => p.id === x.id).price * x.qty, 0
-    ));
-
-  document.getElementById("cartItems").innerHTML = cart.length
-    ? cart.map((x, index) => {
-        const p = products.find(p => p.id === x.id);
-
-        return `
-          <div class="cart-line">
-            <div>
-              ${p.name}<br>
-              <small>
-                المقاس: ${x.size}<br>
-                اللون: ${x.color}<br>
-                ${x.qty} × ${money(p.price)}
-              </small>
-            </div>
-            <button onclick="removeFromCart(${index})">حذف</button>
-          </div>
-        `;
-      }).join("")
-    : '<p class="empty">السلة فارغة حاليًا.</p>';
+  const countBox = document.getElementById("cartCount");
+  const totalBox = document.getElementById("cartTotal");
+  const itemsBox = document.getElementById("cartItems");
+  if (countBox) countBox.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+  if (totalBox) totalBox.textContent = money(cartSubtotal());
+  if (!itemsBox) return;
+  itemsBox.innerHTML = cart.length ? cart.map((item, index) => {
+    const product = getProduct(item.id);
+    if (!product) return "";
+    return `<div class="cart-line"><div>${escapeHtml(product.name)}<br><small>المقاس: ${escapeHtml(item.size)}<br>اللون: ${escapeHtml(item.color)}<br>${item.qty} × ${money(product.price)}</small></div><button onclick="removeFromCart(${index})">حذف</button></div>`;
+  }).join("") : '<p class="empty">السلة فارغة حاليًا.</p>';
 }
-
 const panel = document.getElementById("cartPanel");
 const overlay = document.getElementById("overlay");
-
-function openCart() {
-  panel.classList.add("open");
-  overlay.classList.add("open");
-}
-
-function closeCart() {
-  panel.classList.remove("open");
-  overlay.classList.remove("open");
-}
-
-document.getElementById("openCart").onclick = openCart;
-document.getElementById("closeCart").onclick = closeCart;
-overlay.onclick = closeCart;
-
+function openCart() { panel?.classList.add("open"); overlay?.classList.add("open"); }
+function closeCart() { panel?.classList.remove("open"); overlay?.classList.remove("open"); }
+document.getElementById("openCart")?.addEventListener("click", openCart);
+document.getElementById("closeCart")?.addEventListener("click", closeCart);
+overlay?.addEventListener("click", closeCart);
 const dialog = document.getElementById("orderDialog");
-
-document.getElementById("checkout").onclick = () => {
-  if (!cart.length) {
-    alert("السلة فارغة");
-    return;
-  }
-
-  closeCart();
-  dialog.showModal();
-};
-
-document.getElementById("closeDialog").onclick = () => dialog.close();
-
-document.getElementById("orderForm").addEventListener("submit", async e => {
-  e.preventDefault();
-
-  if (!cart.length) {
-    alert("السلة فارغة");
-    return;
-  }
-
-  const form = e.currentTarget;
-  const btn = form.querySelector('button[type="submit"]');
-
-  btn.disabled = true;
-  btn.textContent = "جارٍ إرسال الطلب...";
-
-  try {
-    const data = Object.fromEntries(
-      new FormData(form).entries()
-    );
-
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        ...data,
-
-        // إرسال كود المسوق تلقائيًا مع الطلب
-        affiliateCode: getAffiliateCode(),
-
-        items: cart.map(x => ({
-          id: x.id,
-          qty: x.qty,
-          size: x.size,
-          color: x.color
-        }))
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        result.details
-          ? result.error + " — " + result.details
-          : result.error || "تعذر إرسال الطلب"
-      );
-    }
-
-    alert(
-      "تم تسجيل طلبك بنجاح. رقم الطلب: " + result.orderId
-    );
-
-    cart = [];
-    renderCart();
-    form.reset();
-    dialog.close();
-
-  } catch (err) {
-    alert(err.message || "حدث خطأ أثناء إرسال الطلب");
-
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "تأكيد الطلب";
-  }
+document.getElementById("checkout")?.addEventListener("click", () => {
+  if (!cart.length) { alert("السلة فارغة"); return; }
+  closeCart(); dialog?.showModal();
 });
-
-renderProducts();
-renderCart();
+document.getElementById("closeDialog")?.addEventListener("click", () => dialog?.close());
+document.getElementById("orderForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!cart.length) { alert("السلة فارغة"); return; }
+  const form = event.currentTarget;
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true; button.textContent = "جارٍ إرسال الطلب...";
+  try {
+    const formData = Object.fromEntries(new FormData(form).entries());
+    const response = await fetch("/api/orders", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...formData, affiliateCode: getAffiliateCode(), items: cart.map(item => ({ id: item.id, qty: item.qty, size: item.size, color: item.color })) })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.details ? `${result.error} — ${result.details}` : result.error || "تعذر إرسال الطلب");
+    alert("تم تسجيل طلبك بنجاح. رقم الطلب: " + result.orderId);
+    cart = []; renderCart(); form.reset(); dialog.close();
+  } catch (error) { alert(error.message || "حدث خطأ أثناء إرسال الطلب"); }
+  finally { button.disabled = false; button.textContent = "تأكيد الطلب"; }
+});
+loadProducts();
