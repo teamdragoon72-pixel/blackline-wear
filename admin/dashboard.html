@@ -593,7 +593,7 @@
       <input type="hidden" id="productId">
       <input type="text" id="productName" placeholder="اسم المنتج" required maxlength="150">
       <input type="number" id="productPrice" placeholder="السعر بالجنيه" min="0.01" step="0.01" required>
-      <input type="text" id="productCategory" placeholder="القسم (رجالي / حريمي)">
+      <select id="productCategory" required><option value="">اختار القسم</option><option value="men">رجالي</option><option value="women">حريمي</option></select>
       <input type="text" id="productSizes" placeholder="المقاسات، مثال: S, M, L, XL, XXL">
       <input type="text" id="productColors" placeholder="الألوان، مثال: أسود, أبيض, رمادي">
       <textarea id="productDescription" class="wide" placeholder="وصف المنتج"></textarea>
