@@ -449,6 +449,13 @@
       object-fit: cover;
       display: block;
     }
+    .upload-box { background:#242424; border:1px solid #444; border-radius:10px; padding:12px; display:grid; gap:10px; }
+    .upload-box label { color:#eee; font-weight:600; }
+    .upload-box input[type=file] { background:#292929; color:#fff; padding:10px; border-radius:8px; }
+    .upload-help { color:#aaa; margin:0; font-size:13px; }
+    .image-preview-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .image-preview-grid img { width:90px; height:90px; object-fit:cover; border-radius:8px; border:1px solid #555; }
+    .product-form button.secondary { background:#333; color:#fff; }
     .product-admin-content { padding: 14px; overflow-wrap: anywhere; }
     .product-admin-content p { color: #ccc; line-height: 1.7; margin: 6px 0; }
     .product-admin-price { color: #25D366 !important; font-size: 20px; font-weight: bold; }
@@ -580,7 +587,7 @@
   <section class="products-section">
     <h2>🛍️ إدارة المنتجات</h2>
     <p style="color:#aaa;line-height:1.8">
-      إضافة وتعديل المنتجات والأسعار والمقاسات والألوان والصور (روابط الصور في المرحلة الحالية).
+      إضافة وتعديل المنتجات والأسعار والمقاسات والألوان، ورفع صور المنتجات من جهازك مباشرة.
     </p>
     <form id="productForm" class="product-form">
       <input type="hidden" id="productId">
@@ -590,7 +597,14 @@
       <input type="text" id="productSizes" placeholder="المقاسات، مثال: S, M, L, XL, XXL">
       <input type="text" id="productColors" placeholder="الألوان، مثال: أسود, أبيض, رمادي">
       <textarea id="productDescription" class="wide" placeholder="وصف المنتج"></textarea>
-      <textarea id="productImages" class="wide" placeholder="روابط الصور (كل رابط في سطر مستقل)"></textarea>
+      <div class="wide upload-box">
+        <label for="productImageFiles">اختيار صور من جهازك (يمكن اختيار أكثر من صورة)</label>
+        <input type="file" id="productImageFiles" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+        <button type="button" id="uploadProductImagesButton" class="secondary">رفع الصور المختارة</button>
+        <p class="upload-help">JPG / PNG / WEBP / AVIF — أقصى حجم للصورة 8 ميجابايت</p>
+        <div id="productImagePreview" class="image-preview-grid"></div>
+      </div>
+      <textarea id="productImages" class="wide" hidden></textarea>
       <input type="text" id="productMainImage" class="wide" placeholder="رابط الصورة الرئيسية (اختياري، يجب أن يكون أحد روابط الصور)">
       <select id="productActive">
         <option value="1">المنتج ظاهر في المتجر</option>
@@ -906,6 +920,55 @@
     const productMessage = document.getElementById("productMessage");
     const saveProductButton = document.getElementById("saveProductButton");
     const cancelProductEdit = document.getElementById("cancelProductEdit");
+    const productImageFiles = document.getElementById("productImageFiles");
+    const uploadProductImagesButton = document.getElementById("uploadProductImagesButton");
+    const productImagePreview = document.getElementById("productImagePreview");
+
+    function renderProductImagePreview() {
+      productImagePreview.replaceChildren();
+      const urls = document.getElementById("productImages").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      urls.forEach(url => {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "معاينة صورة المنتج";
+        img.loading = "lazy";
+        productImagePreview.appendChild(img);
+      });
+    }
+
+    uploadProductImagesButton.addEventListener("click", async () => {
+      const files = Array.from(productImageFiles.files || []);
+      if (!files.length) { showProductMessage("اختار صورة واحدة على الأقل الأول", true); return; }
+      uploadProductImagesButton.disabled = true;
+      const urlsBox = document.getElementById("productImages");
+      const existing = urlsBox.value.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      try {
+        for (const file of files) {
+          showProductMessage("جاري رفع الصورة: " + file.name);
+          const form = new FormData();
+          form.append("file", file);
+          const response = await fetch("/api/admin/upload-image", { method:"POST", credentials:"same-origin", body:form });
+          if (response.status === 401) { window.location.href = "/admin/"; return; }
+          const result = await response.json();
+          if (!response.ok || !result.url) throw new Error(result.error || "فشل رفع " + file.name);
+          existing.push(result.url);
+        }
+        urlsBox.value = existing.join("\n");
+        if (!document.getElementById("productMainImage").value.trim()) {
+          document.getElementById("productMainImage").value = existing[0] || "";
+        }
+        productImageFiles.value = "";
+        renderProductImagePreview();
+        showProductMessage("تم رفع الصور بنجاح. احفظ المنتج لإتمام حفظ الصور معه.");
+      } catch (error) {
+        urlsBox.value = existing.join("\n");
+        renderProductImagePreview();
+        showProductMessage(error.message || "حدث خطأ أثناء رفع الصور", true);
+      } finally {
+        uploadProductImagesButton.disabled = false;
+      }
+    });
+
 
     function showProductMessage(text, isError = false) {
       productMessage.textContent = text;
@@ -931,6 +994,8 @@
       document.getElementById("productActive").value = "1";
       saveProductButton.textContent = "إضافة المنتج";
       cancelProductEdit.style.display = "none";
+      productImageFiles.value = "";
+      renderProductImagePreview();
     }
 
     function editProduct(product) {
@@ -943,6 +1008,8 @@
       document.getElementById("productDescription").value = product.description || "";
       document.getElementById("productImages").value = parseProductArray(product.images).join("\n");
       document.getElementById("productMainImage").value = product.main_image || "";
+      productImageFiles.value = "";
+      renderProductImagePreview();
       document.getElementById("productActive").value = String(Number(product.is_active) === 1 ? 1 : 0);
       saveProductButton.textContent = "حفظ التعديلات";
       cancelProductEdit.style.display = "inline-block";
